@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GST Invoice Reader — Free & Pro</title>
-<!-- Include Supabase JS Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
@@ -116,7 +115,6 @@
   </div>
 </nav>
 
-<!-- AUTHENTICATION SCREEN -->
 <div id="auth-view" class="auth-container">
   <h2 style="margin-bottom: 8px; font-size: 20px;">Store Login</h2>
   <p style="font-size: 13px; color: var(--ink2); margin-bottom: 20px;">Sign in to extract and bundle your monthly GST return files.</p>
@@ -132,14 +130,12 @@
   <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="handleSignupSubmit()">Create Account</button>
 </div>
 
-<!-- MAIN DASHBOARD -->
 <div class="app" id="app-view" style="display: none;">
   <div class="hero">
     <h1>Snap photo → get monthly GSTR-1</h1>
     <p>Built cleanly for local stalls, restaurants, and e-commerce suppliers. Upload receipts all month to compile your clean return files.</p>
   </div>
 
-  <!-- LIMIT BAR -->
   <div class="limit-card">
     <div class="limit-icon">🎯</div>
     <div class="limit-text">
@@ -148,7 +144,6 @@
     </div>
   </div>
 
-  <!-- UPLOAD ZONE -->
   <div class="upload-zone" id="upload-zone" ondragover="event.preventDefault()" ondrop="onDrop(event)">
     <input type="file" accept="image/*" multiple onchange="handleFiles(this.files)">
     <div class="upload-icon">📸</div>
@@ -156,7 +151,6 @@
     <p>Supports low-light smartphone captures, thermal receipts, and digital settlement bills</p>
   </div>
 
-  <!-- RESULTS HEADER -->
   <div class="results-header" id="results-header" style="display:none">
     <h2>Extracted Records</h2>
     <div class="export-row">
@@ -164,7 +158,6 @@
     </div>
   </div>
 
-  <!-- RESULTS LIST -->
   <div id="results-list">
     <div class="empty" id="empty-state">
       <div style="font-size:40px">📂</div>
@@ -212,8 +205,18 @@ async function handleLoginSubmit() {
 async function handleSignupSubmit() {
   const email = document.getElementById('auth-email').value;
   const password = document.getElementById('auth-password').value;
+  
   const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) return showToast(error.message, 'error');
+  
+  if (error) {
+    return showToast(error.message, 'error');
+  }
+
+  // Safety Net 1: Check if email confirmation is blocking the login
+  if (!data.session) {
+    return showToast("Please check your email for a verification link! (Or turn off 'Confirm Email' in Supabase)", "error");
+  }
+
   showToast("Account created successfully! Logging you in...", "success");
   setupDashboard(data.session);
 }
@@ -224,18 +227,33 @@ async function handleLogout() {
 }
 
 async function setupDashboard(session) {
+  // Safety Net 2: Ensure a session actually exists before loading the dashboard
+  if (!session || !session.user) return;
+  
   userSession = session;
   document.getElementById('auth-view').style.display = 'none';
   document.getElementById('app-view').style.display = 'block';
   document.getElementById('nav-user-info').style.display = 'flex';
   
-  // Sync the subscription tier UI elements safely from the backend database
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-  if (profile) {
-    const badge = document.getElementById('plan-badge');
-    badge.className = profile.plan_type === 'pro' ? 'badge-pro' : 'badge-free';
-    badge.textContent = profile.plan_type === 'pro' ? 'Pro active' : 'Free plan';
-    document.getElementById('usage-bar').style.width = profile.plan_type === 'pro' ? '100%' : `${Math.min(100, (profile.usage_count / 10) * 100)}%`;
+  try {
+    // Sync the subscription tier safely
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+      
+    if (error) throw error;
+
+    if (profile) {
+      const badge = document.getElementById('plan-badge');
+      badge.className = profile.plan_type === 'pro' ? 'badge-pro' : 'badge-free';
+      badge.textContent = profile.plan_type === 'pro' ? 'Pro active' : 'Free plan';
+      document.getElementById('usage-bar').style.width = profile.plan_type === 'pro' ? '100%' : `${Math.min(100, (profile.usage_count / 10) * 100)}%`;
+    }
+  } catch (err) {
+    console.error("Dashboard Sync Error:", err);
+    showToast("Dashboard loaded, but there was an error syncing your profile data.", "error");
   }
 }
 
