@@ -170,25 +170,19 @@
 
 <script>
 // ─── CONFIGURATION ───────────────────────────────────────────────────────────
-// Replace these with your actual Supabase Project configuration credentials
 const SUPABASE_URL = "https://xoueoaaihnidlncyngwu.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdWVvYWFpaG5pZGxuY3luZ3d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1Nzc4NDgsImV4cCI6MjA5ODE1Mzg0OH0.3i1tWUZoDvNNu8N1HqkDMsuwVAVnQfZ0PmtZ0qZmLlY";
 const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/process-invoice`;
 
-const supabase = bootstrapSupabase();
+// FIX: Renamed variable to avoid colliding with the global 'supabase' library
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 let userSession = null;
 let sessionInvoices = [];
 
-function bootstrapSupabase() {
-  if (SUPABASE_URL.includes("your-project-ref")) {
-    console.warn("Please configure your correct SUPABASE_URL and SUPABASE_ANON_KEY variables inside the script tag.");
-  }
-  return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
-
 // ─── AUTH CONTROLLERS ────────────────────────────────────────────────────────
 window.onload = async () => {
-  const { data } = await supabase.auth.getSession();
+  const { data } = await supabaseClient.auth.getSession();
   if (data.session) {
     setupDashboard(data.session);
   }
@@ -197,7 +191,7 @@ window.onload = async () => {
 async function handleLoginSubmit() {
   const email = document.getElementById('auth-email').value;
   const password = document.getElementById('auth-password').value;
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) return showToast(error.message, 'error');
   setupDashboard(data.session);
 }
@@ -206,13 +200,12 @@ async function handleSignupSubmit() {
   const email = document.getElementById('auth-email').value;
   const password = document.getElementById('auth-password').value;
   
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
   
   if (error) {
     return showToast(error.message, 'error');
   }
 
-  // Safety Net 1: Check if email confirmation is blocking the login
   if (!data.session) {
     return showToast("Please check your email for a verification link! (Or turn off 'Confirm Email' in Supabase)", "error");
   }
@@ -222,12 +215,11 @@ async function handleSignupSubmit() {
 }
 
 async function handleLogout() {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   window.location.reload();
 }
 
 async function setupDashboard(session) {
-  // Safety Net 2: Ensure a session actually exists before loading the dashboard
   if (!session || !session.user) return;
   
   userSession = session;
@@ -236,8 +228,7 @@ async function setupDashboard(session) {
   document.getElementById('nav-user-info').style.display = 'flex';
   
   try {
-    // Sync the subscription tier safely
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await supabaseClient
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
@@ -277,7 +268,6 @@ async function processReceiptFile(file) {
   try {
     const binaryBase64 = await fileToBase64String(file);
     
-    // Call the serverless Supabase Edge Function directly passing the session auth token
     const response = await fetch(EDGE_FUNCTION_URL, {
       method: 'POST',
       headers: {
