@@ -116,7 +116,7 @@
   .pro-badge { position: absolute; top: -12px; right: 24px; background: var(--accent); color: white; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;}
 
   /* UTILS */
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--surface); font-size: 14px; font-weight: 500; padding: 14px 24px; border-radius: 8px; opacity: 0; transition: all 0.3s; z-index: 300; pointer-events:none; box-shadow: var(--shadow);}
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--card); font-size: 13px; padding: 12px 18px; border-radius: 10px; opacity: 0; transition: all 0.3s; z-index: 300; pointer-events:none; box-shadow: var(--shadow);}
   .toast.show { opacity: 1; transform: translateY(-10px); }
   .spinner { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -128,7 +128,7 @@
 <nav>
   <div class="nav-brand">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    TaxPulse
+    TaxPulse <span style="margin-left:8px; font-size:11px;" title="Free full access during our launch testing phase">Early Launch Beta</span>
   </div>
   <div class="nav-right" id="nav-user-info" style="display: none;">
     <div class="branch-selector" onclick="requirePro('Manage Multiple Branches')">
@@ -160,7 +160,6 @@
     <button class="tab-btn" onclick="switchTab('scanner')">AI Receipt Scanner</button>
   </div>
 
-  <!-- USAGE COUNTER -->
   <div class="usage-card" id="usage-tracker-container">
     <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:700;">
       <span>Monthly AI Processing Limit</span>
@@ -170,7 +169,6 @@
     <span style="font-size:12px; color:var(--ink3); font-weight:500;">Usage resets automatically on the 1st of every month.</span>
   </div>
 
-  <!-- VIEW 1: DASHBOARD (INTERACTIVE & FREEMIUM) -->
   <div id="dashboard-view">
     <div class="filing-banner">
       <div>
@@ -215,7 +213,6 @@
     </div>
   </div>
 
-  <!-- VIEW 2: MANUAL INVOICE CREATOR -->
   <div id="create-view" style="display: none;">
     <div class="invoice-card" style="padding: 32px;">
       <h2 style="margin-bottom: 24px; font-size: 20px; font-weight: 800;">Generate Digital Invoice</h2>
@@ -233,13 +230,14 @@
       </div>
       
       <table class="items-table" id="manual-items" style="margin-top: 16px;">
-        <thead><tr><th>Item Description</th><th>Qty</th><th>Unit Price (₹)</th><th>GST Rate (%)</th></tr></thead>
+        <thead><tr><th>Item Description</th><th>HSN</th><th>Qty</th><th>Unit Price (₹)</th><th>GST Rate (%)</th></tr></thead>
         <tbody>
           <tr>
             <td><input type="text" class="m-name" placeholder="Enter service or product"></td>
-            <td><input type="number" class="m-qty" value="1"></td>
-            <td><input type="number" class="m-price" placeholder="0.00"></td>
-            <td><input type="number" class="m-tax" value="18"></td>
+            <td><input type="text" class="m-hsn" placeholder="e.g. 8471" style="width:70px"></td>
+            <td><input type="number" class="m-qty" value="1" style="width:50px"></td>
+            <td><input type="number" class="m-price" placeholder="0.00" style="width:80px"></td>
+            <td><input type="number" class="m-tax" value="18" style="width:50px"></td>
           </tr>
         </tbody>
       </table>
@@ -253,7 +251,6 @@
     <div id="manual-results"></div>
   </div>
 
-  <!-- VIEW 3: AI SCANNER -->
   <div id="scanner-view" style="display:none;">
     <div style="text-align: center; margin-bottom: 32px;">
       <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Document Extraction Engine</h1>
@@ -289,7 +286,6 @@
 
 </div>
 
-<!-- STRATEGIC PRICING MODAL -->
 <div class="modal-overlay" id="pricing-modal">
   <div class="pricing-modal">
     <button onclick="document.getElementById('pricing-modal').style.display='none'" style="position:absolute;top:20px;right:24px;background:none;border:none;font-size:28px;cursor:pointer;color:var(--ink3);">×</button>
@@ -305,7 +301,7 @@
           <li><span style="color:var(--green); font-weight:bold; margin-right:8px;">✓</span> Save 50 Customers</li>
           <li><span style="color:var(--green); font-weight:bold; margin-right:8px;">✓</span> Standard Support</li>
         </ul>
-        <button class="btn btn-outline" style="width:100%" onclick="alert('Stripe configuration required.')">Select Starter</button>
+        <button class="btn btn-outline" style="width:100%" onclick="alert('Payment pipeline setup coming next!')">Select Starter</button>
       </div>
       <div class="plan-card pro">
         <div class="pro-badge">Most Popular</div>
@@ -325,7 +321,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- HIDDEN PDF TEMPLATE -->
 <div id="pdf-template">
   <h1 style="border-bottom: 2px solid #000; padding-bottom: 10px;">TAX INVOICE</h1>
   <div style="display:flex; justify-content:space-between; margin-top:20px;">
@@ -333,7 +328,7 @@
     <div><strong>Date:</strong> <span id="pdf-date"></span></div>
   </div>
   <table style="width:100%; margin-top:30px; border-collapse:collapse; text-align:left;">
-    <thead><tr style="border-bottom:1px solid #000;"><th>Item Description</th><th>Qty</th><th>Price</th><th>Tax Rate</th></tr></thead>
+    <thead><tr style="border-bottom:1px solid #000;"><th>Item Description</th><th>HSN</th><th>Qty</th><th>Price</th><th>Tax Rate</th></tr></thead>
     <tbody id="pdf-items"></tbody>
   </table>
   <h3 style="text-align:right; margin-top:30px; padding-top: 10px; border-top: 1px solid #000;">Total Amount: ₹<span id="pdf-total"></span></h3>
@@ -429,9 +424,10 @@ function switchTab(tab) {
 function addManualRow() {
   const row = `<tr>
     <td><input type="text" class="m-name" placeholder="Item description"></td>
-    <td><input type="number" class="m-qty" value="1"></td>
-    <td><input type="number" class="m-price" placeholder="0.00"></td>
-    <td><input type="number" class="m-tax" value="18"></td>
+    <td><input type="text" class="m-hsn" placeholder="e.g. 8471" style="width:70px"></td>
+    <td><input type="number" class="m-qty" value="1" style="width:50px"></td>
+    <td><input type="number" class="m-price" placeholder="0.00" style="width:80px"></td>
+    <td><input type="number" class="m-tax" value="18" style="width:50px"></td>
   </tr>`;
   document.querySelector('#manual-items tbody').insertAdjacentHTML('beforeend', row);
 }
@@ -443,9 +439,10 @@ function generateManualBill() {
     const price = parseFloat(row.querySelector('.m-price').value) || 0;
     const tax = parseFloat(row.querySelector('.m-tax').value) || 0;
     const name = row.querySelector('.m-name').value;
+    const hsn = row.querySelector('.m-hsn').value || '';
     if(name) {
       total += (qty * price) * (1 + (tax/100));
-      items.push({name, qty, price, tax_rate: tax});
+      items.push({name, hsn, qty, price, tax_rate: tax});
     }
   });
 
@@ -457,9 +454,6 @@ function generateManualBill() {
     type: 'sales'
   };
   
-  const loadingDiv = document.getElementById('manual-loading');
-  if(loadingDiv) loadingDiv.remove();
-  
   renderEditableInvoiceCard(data, 'Generated Digital Invoice', 'manual-results');
 }
 
@@ -467,7 +461,6 @@ async function processFile(file) {
   if (!navigator.onLine) return showToast("Network link required for AI parsing.", "error");
   if (!file) return;
 
-  // Insert loading state correctly so it can be removed
   const loadingId = `load-${Date.now()}`;
   document.getElementById('results-list').insertAdjacentHTML('afterbegin', `
     <div id="${loadingId}" style="padding:48px 24px; text-align:center; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:24px;">
@@ -488,7 +481,7 @@ async function processFile(file) {
     });
     
     const data = await response.json();
-    document.getElementById(loadingId).remove(); // Fixes the "Extracting..." bug
+    document.getElementById(loadingId).remove(); 
 
     if (!response.ok) throw new Error(data.error || "Image unreadable. Please ensure lighting is good.");
     data.type = isPurchase ? 'purchase' : 'sales';
@@ -507,9 +500,10 @@ function renderEditableInvoiceCard(data, filename, containerId) {
   let itemsHTML = (data.items || []).map(item => `
     <tr class="item-row">
       <td><input type="text" class="i-name" value="${item.name || ''}"></td>
-      <td><input type="number" class="i-qty" value="${item.qty || 1}"></td>
-      <td><input type="number" class="i-price" value="${item.price || 0}"></td>
-      <td><input type="number" class="i-tax" value="${item.tax_rate || 0}"></td>
+      <td><input type="text" class="i-hsn" value="${item.hsn || ''}" style="width:70px"></td>
+      <td><input type="number" class="i-qty" value="${item.qty || 1}" style="width:50px"></td>
+      <td><input type="number" class="i-price" value="${item.price || 0}" style="width:80px"></td>
+      <td><input type="number" class="i-tax" value="${item.tax_rate || 0}" style="width:50px">%</td>
     </tr>
   `).join('');
 
@@ -525,8 +519,8 @@ function renderEditableInvoiceCard(data, filename, containerId) {
         <div class="inv-cell"><label>Target GSTIN</label><input type="text" class="edit-input buy-input" value="${data.buyer_gstin || data.gstin_supplier || ''}"></div>
       </div>
       <table class="items-table">
-        <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Tax %</th></tr></thead>
-        <tbody>${itemsHTML || '<tr><td colspan="4" style="text-align:center; color:var(--ink3); padding:24px;">No discrete items found. Proceeding with total value.</td></tr>'}</tbody>
+        <thead><tr><th>Description</th><th>HSN</th><th>Qty</th><th>Unit Price</th><th>Tax %</th></tr></thead>
+        <tbody>${itemsHTML || '<tr><td colspan="5" style="text-align:center; color:var(--ink3); padding:24px;">No discrete items found. Proceeding with total value.</td></tr>'}</tbody>
       </table>
       <div class="action-bar">
         <button class="btn btn-outline" id="save-btn-${invId}" onclick="saveToCloud('${invId}')">☁️ Save Record</button>
@@ -544,6 +538,7 @@ function getCardData(id) {
   card.querySelectorAll('.item-row').forEach(row => {
      items.push({
        name: row.querySelector('.i-name').value,
+       hsn: row.querySelector('.i-hsn').value,
        qty: row.querySelector('.i-qty').value,
        price: row.querySelector('.i-price').value,
        tax: row.querySelector('.i-tax').value
@@ -644,7 +639,7 @@ function generatePDF(cardId) {
   document.getElementById('pdf-sup-gstin').innerText = data.targetGstin || "Cash Sale";
   
   let rows = '';
-  data.items.forEach(i => { rows += `<tr><td style="padding:10px 0; border-bottom:1px solid #eee;">${i.name}</td><td style="border-bottom:1px solid #eee;">${i.qty}</td><td style="border-bottom:1px solid #eee;">₹${i.price}</td><td style="border-bottom:1px solid #eee;">${i.tax}%</td></tr>`; });
+  data.items.forEach(i => { rows += `<tr><td style="padding:10px 0; border-bottom:1px solid #eee;">${i.name}</td><td style="border-bottom:1px solid #eee;">${i.hsn}</td><td style="border-bottom:1px solid #eee;">${i.qty}</td><td style="border-bottom:1px solid #eee;">₹${i.price}</td><td style="border-bottom:1px solid #eee;">${i.tax}%</td></tr>`; });
   document.getElementById('pdf-items').innerHTML = rows;
 
   const element = document.getElementById('pdf-template');
@@ -652,9 +647,16 @@ function generatePDF(cardId) {
   html2pdf().from(element).save(`TaxPulse_Invoice_${Date.now()}.pdf`).then(() => element.style.display='none');
 }
 
+// ─── UPGRADED INTERACTIVE WHATSAPP BILL ROUTER ───
 function shareWhatsApp(cardId) {
   const data = getCardData(cardId);
-  let text = `🧾 *TAX INVOICE*\nTotal: ₹${data.total}\nDate: ${data.date || new Date().toISOString().split('T')[0]}\n\n_Generated instantly via TaxPulse_`;
+  let text = `🧾 *TAX INVOICE*\nDate: ${data.date || new Date().toISOString().split('T')[0]}\n\n*Items parsed:*\n`;
+  
+  data.items.forEach(i => {
+    text += `- ${i.name} (Qty: ${i.qty}) - ₹${i.price} [HSN: ${i.hsn}]\n`;
+  });
+  
+  text += `\n*Total Billing Amount: ₹${data.total}*\n\n_Compiled dynamically via TaxPulse AI Compliance Workspace_`;
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
