@@ -3,38 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>TaxPulse — AI GST Processor</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root {
-    --ink: #1a1a2e;
-    --ink2: #4a4a6a;
-    --ink3: #8888aa;
-    --surface: #f7f7fb;
-    --card: #ffffff;
-    --border: #e2e2ee;
-    --accent: #4f46e5;
-    --accent-light: #ede9fe;
-    --accent-dark: #3730a3;
-    --green: #059669;
-    --green-light: #d1fae5;
-    --amber: #d97706;
-    --amber-light: #fef3c7;
-    --red: #dc2626;
-    --red-light: #fee2e2;
-    --radius: 10px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+    --ink: #1a1a2e; --ink2: #4a4a6a; --ink3: #8888aa; --surface: #f7f7fb;
+    --card: #ffffff; --border: #e2e2ee; --accent: #4f46e5; --accent-light: #ede9fe;
+    --accent-dark: #3730a3; --green: #059669; --green-light: #d1fae5;
+    --amber: #d97706; --amber-light: #fef3c7; --red: #dc2626; --red-light: #fee2e2;
+    --radius: 10px; --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
   }
 
-  /* DARK MODE VARIABLES */
   body.dark {
-    --ink: #f8f8f2;
-    --ink2: #a2a2c0;
-    --ink3: #6b6b8e;
-    --surface: #11111b;
-    --card: #1e1e2e;
-    --border: #313244;
-    --accent-light: #313244;
+    --ink: #f8f8f2; --ink2: #a2a2c0; --ink3: #6b6b8e; --surface: #11111b;
+    --card: #1e1e2e; --border: #313244; --accent-light: #313244;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.2s, border-color 0.2s; }
@@ -42,12 +27,12 @@
 
   /* NAV */
   nav { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
-  .nav-brand { font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
-  .nav-brand span { background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.5px; }
+  .nav-brand { font-size: 16px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .nav-brand span { background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
   .nav-right { display: flex; align-items: center; gap: 12px; }
   .badge-free { font-size: 12px; color: var(--ink3); background: var(--surface); border: 1px solid var(--border); padding: 3px 10px; border-radius: 20px; }
   .badge-pro { font-size: 12px; color: var(--green); background: var(--green-light); border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
-  .theme-toggle { background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .theme-toggle { background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 50%; }
 
   /* LAYOUT */
   .app { max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; }
@@ -77,6 +62,7 @@
   .btn-primary:hover { background: var(--accent-dark); }
   .btn-outline { background: var(--card); color: var(--ink); border: 1px solid var(--border); }
   .btn-outline:hover { background: var(--surface); }
+  .btn-green { background: var(--green); color: white; }
   .btn-pro { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2); }
   
   .form-group { margin-bottom: 16px; }
@@ -85,7 +71,11 @@
 
   /* EDITABLE INVOICE CARD (REVIEW SYSTEM) */
   .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .invoice-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; box-shadow: var(--shadow); }
+  .invoice-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 24px; overflow: hidden; box-shadow: var(--shadow); }
+  
+  .validation-warning { background: var(--red-light); color: var(--red); padding: 10px 18px; font-size: 12px; font-weight: 600; display: none; border-bottom: 1px solid #fecaca; }
+  .validation-warning.show { display: block; }
+
   .inv-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface); }
   .inv-badges { display: flex; gap: 6px; }
   .tag { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
@@ -97,11 +87,21 @@
   .inv-cell:last-child { border-right: none; }
   .inv-cell label { font-size: 11px; color: var(--ink3); display: block; margin-bottom: 3px; text-transform: uppercase; }
   
-  /* Editable fields inside the card */
-  .edit-input { width: 100%; font-size: 14px; font-weight: 600; color: var(--ink); border: 1px dashed transparent; background: transparent; padding: 2px 4px; margin-left: -4px; border-radius: 4px; outline: none; transition: border-color 0.2s; }
+  .edit-input { width: 100%; font-size: 14px; font-weight: 600; color: var(--ink); border: 1px dashed transparent; background: transparent; padding: 2px 4px; margin-left: -4px; border-radius: 4px; outline: none; }
   .edit-input:hover, .edit-input:focus { border-color: var(--accent); background: var(--surface); }
-  .edit-hint { font-size: 10px; color: var(--ink3); position: absolute; right: 10px; top: 12px; opacity: 0; transition: opacity 0.2s; }
+  .edit-input.error { border-color: var(--red); color: var(--red); }
+  .edit-hint { font-size: 10px; color: var(--ink3); position: absolute; right: 10px; top: 12px; opacity: 0; }
   .inv-cell:hover .edit-hint { opacity: 1; }
+
+  /* LINE ITEMS TABLE */
+  .items-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .items-table th { background: var(--surface); text-align: left; padding: 8px 18px; color: var(--ink2); font-weight: 500; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase;}
+  .items-table td { padding: 8px 18px; border-bottom: 1px solid var(--border); }
+  .items-table input { width: 100%; background: transparent; border: 1px dashed transparent; color: var(--ink); font-size: 13px; outline: none; padding: 4px; border-radius: 4px;}
+  .items-table input:hover, .items-table input:focus { border-color: var(--accent); background: var(--surface); }
+
+  /* ACTION BAR */
+  .action-bar { padding: 14px 18px; background: var(--surface); display: flex; gap: 10px; justify-content: flex-end; }
 
   /* PRICING MODAL */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
@@ -123,6 +123,10 @@
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--card); font-size: 13px; padding: 12px 18px; border-radius: 10px; transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 300; }
   .toast.show { transform: translateY(0); opacity: 1; }
   .empty { text-align: center; padding: 48px 24px; color: var(--ink3); }
+
+  /* HIDDEN PDF TEMPLATE */
+  #pdf-template { display: none; padding: 40px; background: white; color: black; font-family: sans-serif; }
+  .watermark { text-align: center; margin-top: 40px; font-size: 10px; color: #888; border-top: 1px dashed #ccc; padding-top: 10px; }
 </style>
 </head>
 <body>
@@ -154,15 +158,15 @@
 
 <div class="app" id="app-view" style="display: none;">
   <div class="hero">
-    <h1>Snap photo → verify → get GSTR-1</h1>
-    <p>Built for small businesses, freelancers, and restaurants. Upload receipts in batches to instantly compile your accurate JSON returns.</p>
+    <h1>Snap. Verify. File.</h1>
+    <p>Upload a receipt to extract line items, verify GST math, and generate shareable PDFs instantly.</p>
   </div>
 
   <div class="upload-zone" id="upload-zone" ondragover="event.preventDefault()" ondrop="onDrop(event)">
-    <input type="file" accept="image/*" multiple onchange="queueFiles(this.files)">
+    <input type="file" accept="image/*" capture="environment" multiple onchange="queueFiles(this.files)">
     <div class="upload-icon">📸</div>
-    <h3>Select or drop up to 5 invoice photos at once</h3>
-    <p>Supports low-light smartphone captures, thermal receipts, and settlement bills</p>
+    <h3>Tap to Scan Receipt</h3>
+    <p>Uses your phone's native camera or select multiple files</p>
   </div>
 
   <div class="staging-area" id="staging-area">
@@ -177,10 +181,10 @@
   <div class="results-header" id="results-header" style="display:none">
     <div>
       <h2>Extracted Records</h2>
-      <p style="font-size: 11px; color: var(--amber); margin-top:2px;">Click any field below to correct AI mistakes before downloading.</p>
+      <p style="font-size: 11px; color: var(--amber); margin-top:2px;">Click any field to correct AI mistakes before downloading.</p>
     </div>
     <div class="export-row">
-      <button class="btn btn-primary" onclick="downloadJSON()">⬇ Download GSTR-1 JSON</button>
+      <button class="btn btn-outline" onclick="downloadJSON()">⬇ Download GSTR-1 JSON</button>
     </div>
   </div>
 
@@ -190,6 +194,21 @@
       <p>No receipts processed in this session yet.</p>
     </div>
   </div>
+</div>
+
+<div id="pdf-template">
+  <h1 style="border-bottom: 2px solid #000; padding-bottom: 10px;">TAX INVOICE</h1>
+  <div style="display:flex; justify-content:space-between; margin-top:20px;">
+    <div><strong>Supplier GSTIN:</strong> <span id="pdf-sup-gstin"></span></div>
+    <div><strong>Date:</strong> <span id="pdf-date"></span></div>
+  </div>
+  <div style="margin-top:10px;"><strong>Buyer GSTIN:</strong> <span id="pdf-buy-gstin"></span></div>
+  <table style="width:100%; margin-top:30px; border-collapse:collapse; text-align:left;">
+    <thead><tr style="border-bottom:1px solid #000;"><th>Item</th><th>HSN</th><th>Qty</th><th>Price</th><th>Tax</th></tr></thead>
+    <tbody id="pdf-items"></tbody>
+  </table>
+  <h3 style="text-align:right; margin-top:20px;">Total: ₹<span id="pdf-total"></span></h3>
+  <div class="watermark">Generated for free by TaxPulse AI Billing</div>
 </div>
 
 <div class="modal-overlay" id="pricing-modal">
@@ -238,8 +257,8 @@ const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/process-invoice`;
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let userSession = null;
-let queuedFiles = []; // Holds files before processing
-let invoiceCounter = 0; // Tracks IDs for the editable forms
+let queuedFiles = []; 
+let invoiceCounter = 0; 
 
 // ─── THEME CONTROLLER ────────────────────────────────────────────────────────
 function toggleTheme() {
@@ -294,15 +313,10 @@ function onDrop(e) {
 
 function queueFiles(files) {
   if (!files || !files.length) return;
-  
-  // Free tier limit check
   if (queuedFiles.length + files.length > 5) {
     return showToast("Free plan limit: Max 5 images per batch. Upgrade for unlimited.", "error");
   }
-
-  for (const file of Array.from(files)) {
-    queuedFiles.push(file);
-  }
+  for (const file of Array.from(files)) queuedFiles.push(file);
   renderQueue();
 }
 
@@ -338,12 +352,10 @@ function renderQueue() {
 // ─── PROCESS & EDGE INTERACTION ──────────────────────────────────────────────
 async function processQueue() {
   if (queuedFiles.length === 0) return;
-  
   const btn = document.getElementById('process-btn');
-  btn.innerHTML = `<div class="spinner" style="border-top-color:#fff"></div> Processing ${queuedFiles.length} files...`;
+  btn.innerHTML = `<div class="spinner" style="border-top-color:#fff; width:16px; height:16px; margin:0; border-width:2px;"></div> Processing...`;
   btn.disabled = true;
 
-  // Process files sequentially to respect API limits
   const filesToProcess = [...queuedFiles];
   queuedFiles = []; 
   renderQueue();
@@ -373,6 +385,9 @@ async function processReceiptFile(file) {
 
     const parsedOutput = await response.json();
     if (!response.ok) throw new Error(parsedOutput.error || "Failed to process receipt");
+    
+    // Ensure items array exists
+    if(!parsedOutput.items) parsedOutput.items = [];
 
     removeProcessingUI(componentId);
     renderEditableInvoiceCard(parsedOutput, file.name);
@@ -391,13 +406,33 @@ function fileToBase64String(file) {
   });
 }
 
+// ─── VALIDATION FIREWALL ──────────────────────────────────────────────────────
+function validateGSTIN(gstin) {
+  if (!gstin || gstin === "Not Found") return true; 
+  const regex = /^([0][1-9]|[1-2][0-9]|[3][0-8])[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+  return regex.test(gstin);
+}
+
+function checkMath(items, reportedTotal) {
+  if (!items || items.length === 0) return true; // Can't check
+  let calcTotal = 0;
+  items.forEach(item => {
+    calcTotal += (item.qty * item.price) + (item.qty * item.price * ((item.tax_rate||0)/100));
+  });
+  // Allow a small 2 rupee margin for rounding errors
+  return Math.abs(calcTotal - (reportedTotal || 0)) <= 2.5;
+}
+
 // ─── UI RENDERING (REVIEW SYSTEM) ────────────────────────────────────────────
 function appendProcessingUI(id, filename) {
   document.getElementById('empty-state')?.remove();
   const card = document.createElement('div');
-  card.className = 'processing-card';
+  card.className = 'processing-card invoice-card';
   card.id = `loading-${id}`;
-  card.innerHTML = `<div class="spinner"></div><div><strong>Reading ${filename}...</strong><span style="display:block;font-size:12px;color:var(--ink3);">Extracting via Gemini 3.5 Flash...</span></div>`;
+  card.innerHTML = `<div style="padding: 24px; display:flex; align-items:center; gap:16px;">
+    <div class="spinner" style="margin:0"></div>
+    <div><strong>Reading ${filename}...</strong><span style="display:block;font-size:12px;color:var(--ink3);">Extracting via Gemini 3.5 Flash...</span></div>
+  </div>`;
   document.getElementById('results-list').prepend(card);
 }
 
@@ -409,15 +444,37 @@ function renderEditableInvoiceCard(data, filename) {
   document.getElementById('results-header').style.display = 'flex';
   const card = document.createElement('div');
   card.className = 'invoice-card processed-invoice';
-  
-  // Give this invoice a unique ID so we can scrape the edits later
   const invId = `inv-${invoiceCounter++}`;
-  card.setAttribute('data-id', invId);
-  card.setAttribute('data-is-b2b', data.is_b2b);
+  card.id = invId;
+  card.setAttribute('data-is-b2b', data.buyer_gstin ? 'true' : 'false');
   
-  const typeTag = data.is_b2b ? '<span class="tag tag-b2b">B2B Sale</span>' : '<span class="tag tag-b2c">B2C Counter</span>';
+  // Validation Checks
+  const supValid = validateGSTIN(data.gstin_supplier);
+  const buyValid = validateGSTIN(data.buyer_gstin);
+  const mathValid = checkMath(data.items, data.total_amount);
   
+  let warnings = [];
+  if (!supValid) warnings.push("Supplier GSTIN format is invalid.");
+  if (!buyValid && data.buyer_gstin) warnings.push("Buyer GSTIN format is invalid.");
+  if (!mathValid) warnings.push("Math mismatch! Line items do not add up to Total Amount.");
+
+  const typeTag = data.buyer_gstin ? '<span class="tag tag-b2b">B2B Sale</span>' : '<span class="tag tag-b2c">B2C Counter</span>';
+  
+  // Build Line Items
+  let itemsHTML = data.items.map(item => `
+    <tr class="item-row">
+      <td><input type="text" class="i-name" value="${item.name || ''}"></td>
+      <td><input type="text" class="i-hsn" value="${item.hsn || ''}" style="width:60px"></td>
+      <td><input type="number" class="i-qty" value="${item.qty || 1}" style="width:40px"></td>
+      <td><input type="number" class="i-price" value="${item.price || 0}" style="width:60px"></td>
+      <td><input type="number" class="i-tax" value="${item.tax_rate || 0}" style="width:40px">%</td>
+    </tr>
+  `).join('');
+
   card.innerHTML = `
+    <div class="validation-warning ${warnings.length > 0 ? 'show' : ''}">
+      ⚠️ ${warnings.join('<br>')}
+    </div>
     <div class="inv-head">
       <div class="inv-head-left">
         <span class="inv-num">Source: ${filename}</span>
@@ -428,58 +485,126 @@ function renderEditableInvoiceCard(data, filename) {
     <div class="inv-grid">
       <div class="inv-cell">
         <label>Total Bill Amount (₹)</label>
-        <input type="number" class="edit-input amt-input" value="${data.total_amount || 0}">
-        <span class="edit-hint">✎ Click to edit</span>
+        <input type="number" class="edit-input amt-input ${!mathValid ? 'error' : ''}" value="${data.total_amount || 0}">
+        <span class="edit-hint">✎ Edit</span>
       </div>
       <div class="inv-cell">
         <label>Date (YYYY-MM-DD)</label>
         <input type="text" class="edit-input date-input" value="${data.receipt_date || ''}">
-        <span class="edit-hint">✎ Click to edit</span>
+        <span class="edit-hint">✎ Edit</span>
       </div>
       <div class="inv-cell">
-        <label>Place of Supply (State Code)</label>
+        <label>POS (State Code)</label>
         <input type="text" class="edit-input pos-input" value="${data.place_of_supply || ''}">
-        <span class="edit-hint">✎ Click to edit</span>
+        <span class="edit-hint">✎ Edit</span>
       </div>
     </div>
 
-    <div class="inv-grid" style="border-bottom:none">
-      <div class="inv-cell" style="grid-column: span 2;">
+    <div class="inv-grid" style="grid-template-columns: 1fr 1fr">
+      <div class="inv-cell">
         <label>Supplier GSTIN</label>
-        <input type="text" class="edit-input gstin-input" value="${data.gstin_supplier || ''}">
-        <span class="edit-hint">✎ Click to edit</span>
+        <input type="text" class="edit-input gstin-input ${!supValid ? 'error' : ''}" value="${data.gstin_supplier || ''}">
+        <span class="edit-hint">✎ Edit</span>
       </div>
       <div class="inv-cell">
-        <label>E-commerce Platform</label>
-        <input type="text" class="edit-input eco-input" value="${data.ecommerce_platform || ''}" placeholder="e.g., Zomato, None">
-        <span class="edit-hint">✎ Click to edit</span>
+        <label>Buyer GSTIN (Optional)</label>
+        <input type="text" class="edit-input buy-input ${!buyValid ? 'error' : ''}" value="${data.buyer_gstin || ''}" placeholder="Leave blank for B2C">
+        <span class="edit-hint">✎ Edit</span>
       </div>
+    </div>
+
+    <table class="items-table">
+      <thead><tr><th>Item Name</th><th>HSN</th><th>Qty</th><th>Price</th><th>Tax</th></tr></thead>
+      <tbody>${itemsHTML || '<tr><td colspan="5" style="text-align:center;color:var(--ink3)">No line items detected. You can add them manually.</td></tr>'}</tbody>
+    </table>
+
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="generatePDF('${invId}')">📄 Save PDF</button>
+      <button class="btn btn-green" onclick="shareWhatsApp('${invId}')">💬 WhatsApp Bill</button>
     </div>
   `;
   document.getElementById('results-list').prepend(card);
 }
 
-// ─── FINAL EXPORT GENERATION ──────────────────────────────────────────────────
+// ─── DOM SCRAPER (Gets user's live edits before export/sharing) ──────────────
+function getCardData(id) {
+  const card = document.getElementById(id);
+  const items = [];
+  card.querySelectorAll('.item-row').forEach(row => {
+     items.push({
+       name: row.querySelector('.i-name').value,
+       hsn: row.querySelector('.i-hsn').value,
+       qty: row.querySelector('.i-qty').value,
+       price: row.querySelector('.i-price').value,
+       tax: row.querySelector('.i-tax').value
+     });
+  });
+  return {
+    supplier: card.querySelector('.gstin-input').value,
+    buyer: card.querySelector('.buy-input').value,
+    date: card.querySelector('.date-input').value,
+    total: card.querySelector('.amt-input').value,
+    pos: card.querySelector('.pos-input').value,
+    items: items,
+    is_b2b: card.querySelector('.buy-input').value.trim() !== ""
+  };
+}
+
+// ─── EXPORT & SHARE VIRAL LOOP ───────────────────────────────────────────────
+function generatePDF(cardId) {
+  const data = getCardData(cardId);
+  
+  document.getElementById('pdf-sup-gstin').innerText = data.supplier || 'N/A';
+  document.getElementById('pdf-buy-gstin').innerText = data.buyer || "N/A (B2C Cash Sale)";
+  document.getElementById('pdf-date').innerText = data.date || 'N/A';
+  document.getElementById('pdf-total').innerText = data.total;
+  
+  let rows = '';
+  data.items.forEach(i => {
+    rows += `<tr><td style="padding:8px 0; border-bottom:1px solid #eee;">${i.name}</td><td style="border-bottom:1px solid #eee;">${i.hsn}</td><td style="border-bottom:1px solid #eee;">${i.qty}</td><td style="border-bottom:1px solid #eee;">₹${i.price}</td><td style="border-bottom:1px solid #eee;">${i.tax}%</td></tr>`;
+  });
+  document.getElementById('pdf-items').innerHTML = rows;
+
+  const element = document.getElementById('pdf-template');
+  element.style.display = 'block'; 
+  
+  html2pdf().set({
+    margin: 10,
+    filename: `TaxPulse_Invoice_${Date.now()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(element).save().then(() => {
+    element.style.display = 'none'; 
+    showToast("PDF Generated! Check your downloads folder.", "success");
+  });
+}
+
+function shareWhatsApp(cardId) {
+  const data = getCardData(cardId);
+  let text = `🧾 *TAX INVOICE*\nDate: ${data.date}\n\n*Items:*\n`;
+  
+  data.items.forEach(i => {
+    text += `- ${i.name} (Qty: ${i.qty}) - ₹${i.price}\n`;
+  });
+  
+  text += `\n*Total Amount: ₹${data.total}*\n\n_Generated instantly with TaxPulse AI_`;
+  
+  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
 function downloadJSON() {
   const cards = document.querySelectorAll('.processed-invoice');
   if (cards.length === 0) return showToast("No data to download", "error");
 
   const finalInvoices = [];
-  
-  // Scrape the DOM to grab the user's manual corrections
   cards.forEach(card => {
-    finalInvoices.push({
-      total_amount: parseFloat(card.querySelector('.amt-input').value) || 0,
-      receipt_date: card.querySelector('.date-input').value,
-      place_of_supply: card.querySelector('.pos-input').value,
-      gstin_supplier: card.querySelector('.gstin-input').value,
-      ecommerce_platform: card.querySelector('.eco-input').value || null,
-      is_b2b: card.getAttribute('data-is-b2b') === 'true'
-    });
+    finalInvoices.push(getCardData(card.id));
   });
 
   const jsonExportStr = JSON.stringify({
-    gstin: finalInvoices[0]?.gstin_supplier || "NOT_FOUND",
+    gstin: finalInvoices[0]?.supplier || "NOT_FOUND",
     fp: new Date().getMonth() + 1 + "" + new Date().getFullYear(),
     version: "GST3.0.4",
     b2b: finalInvoices.filter(i => i.is_b2b),
@@ -488,7 +613,7 @@ function downloadJSON() {
 
   const element = document.createElement('a');
   element.href = URL.createObjectURL(new Blob([jsonExportStr], { type: 'application/json' }));
-  element.download = `TaxPulse_GSTR1_${Date.now()}.json`;
+  element.download = `TaxPulse_GSTR1_Ready_${Date.now()}.json`;
   element.click();
   showToast("GSTR-1 JSON downloaded successfully!", "success");
 }
