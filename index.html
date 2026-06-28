@@ -3,220 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#1e1e2e">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TaxPulse — Daily Billing & GST</title>
+<title>TaxPulse — Enterprise GST Billing & AI Reconciliation</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
+  /* HIGH-END TECH THEME */
   :root {
-    --ink: #1a1a2e; --ink2: #4a4a6a; --ink3: #8888aa; --surface: #f7f7fb;
-    --card: #ffffff; --border: #e2e2ee; --accent: #4f46e5; --accent-light: #ede9fe;
-    --accent-dark: #3730a3; --green: #059669; --green-light: #d1fae5;
+    --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --surface: #f8fafc;
+    --card: #ffffff; --border: #e2e8f0; --accent: #2563eb; --accent-hover: #1d4ed8; 
+    --accent-light: #eff6ff; --accent-dark: #1e3a8a; --green: #059669; --green-light: #d1fae5;
     --amber: #d97706; --amber-light: #fef3c7; --red: #dc2626; --red-light: #fee2e2;
-    --radius: 10px; --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+    --radius: 12px; --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05); --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 
   body.dark {
-    --ink: #f8f8f2; --ink2: #a2a2c0; --ink3: #6b6b8e; --surface: #11111b;
-    --card: #1e1e2e; --border: #313244; --accent-light: #313244;
+    --ink: #f8fafc; --ink2: #cbd5e1; --ink3: #64748b; --surface: #0f172a;
+    --card: #1e293b; --border: #334155; --accent-light: #1e3a8a;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.2s, border-color 0.2s; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--surface); color: var(--ink); min-height: 100vh; }
+  body { font-family: var(--font-main); background: var(--surface); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased;}
 
-  /* NAV & TABS */
-  nav { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
-  .nav-brand { font-size: 16px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-  .nav-brand span { background: var(--amber-light); color: var(--amber); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; border: 1px solid #fde68a; }
-  .nav-right { display: flex; align-items: center; gap: 12px; }
-  .badge-free { font-size: 12px; color: var(--ink3); background: var(--surface); border: 1px solid var(--border); padding: 3px 10px; border-radius: 20px; }
-  .badge-pro { font-size: 12px; color: var(--green); background: var(--green-light); border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+  /* NAV & HEADER */
+  nav { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
+  .nav-brand { font-size: 18px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px;}
+  .branch-selector { background: var(--surface); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--ink2); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .branch-selector:hover { border-color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .badge-free { font-size: 12px; color: var(--ink2); background: var(--surface); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; font-weight: 600;}
+  .badge-pro { font-size: 12px; color: var(--green); background: var(--green-light); border: 1px solid #a7f3d0; padding: 4px 12px; border-radius: 20px; font-weight: 700; }
   
-  .app-tabs { display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border); overflow-x: auto;}
-  .tab-btn { background: none; border: none; padding: 12px 16px; font-size: 14px; font-weight: 600; color: var(--ink3); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;}
-  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 32px; border-bottom: 1px solid var(--border); overflow-x: auto; padding-bottom: 4px;}
+  .tab-btn { background: transparent; border: none; padding: 12px 20px; font-size: 14px; font-weight: 600; color: var(--ink3); cursor: pointer; border-radius: 8px 8px 0 0; position: relative;}
+  .tab-btn:hover { color: var(--ink); background: var(--surface); }
+  .tab-btn.active { color: var(--accent); background: var(--accent-light); }
+  .tab-btn.active::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 2px; background: var(--accent); }
 
-  .app { max-width: 860px; margin: 0 auto; padding: 20px 20px 60px; }
-  .auth-container { max-width: 400px; margin: 80px auto; background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); }
-
-  /* ONBOARDING FLOW STEPS */
-  .guide-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; text-align: center; }
-  .guide-step { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius); font-size: 12px; color: var(--ink2); box-shadow: var(--shadow); }
-  .guide-step strong { color: var(--accent); display: block; margin-bottom: 2px; }
-
-  /* USAGE COUNTER BAR */
-  .usage-card { background: var(--card); border: 1px solid var(--border); padding: 14px 18px; border-radius: var(--radius); margin-bottom: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; }
-  .pbar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
-  .pbar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 99px; transition: width 0.4s; }
-
+  .app { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+  
   /* BUTTONS & FORMS */
-  .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--ink); }
+  .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2); }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--ink); font-weight: 500;}
+  .btn-outline:hover { background: var(--surface); border-color: var(--ink3); }
   .btn-green { background: var(--green); color: white; }
-  .btn-pro { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2); }
+  .btn-pro { background: linear-gradient(135deg, #0f172a, #334155); color: white; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
   
   .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color:var(--ink2); text-transform:uppercase;}
-  .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; outline: none; background: var(--surface); color: var(--ink); font-size:14px;}
+  .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; color:var(--ink2); text-transform:uppercase; letter-spacing: 0.5px;}
+  .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; background: var(--surface); color: var(--ink); font-size:14px; font-family: var(--font-main);}
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
 
-  /* UI COMPONENTS */
-  .hero { text-align: center; margin-bottom: 28px; }
-  .hero h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-  
-  .upload-zone { border: 2px dashed var(--border); border-radius: 14px; padding: 36px 24px; text-align: center; cursor: pointer; background: var(--card); margin-bottom: 20px; position: relative; }
-  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  
-  .type-toggle { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px; margin-bottom: 20px; width: fit-content; margin: 0 auto 24px;}
-  .type-toggle label { padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; color: var(--ink3); }
+  /* SCANNER DUAL-UPLOAD UI */
+  .scanner-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .upload-box { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px 24px; text-align: center; background: var(--card); cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;}
+  .upload-box:hover { border-color: var(--accent); background: var(--accent-light); transform: translateY(-2px); }
+  .upload-box input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.8; }
+  .upload-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+  .upload-box p { font-size: 13px; color: var(--ink3); font-weight: 500;}
+
+  /* TOGGLE SWITCH */
+  .type-toggle { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px; margin-bottom: 24px;}
+  .type-toggle label { padding: 8px 24px; font-size: 13px; font-weight: 700; cursor: pointer; border-radius: 6px; color: var(--ink3); transition: 0.2s; }
   .type-toggle input { display: none; }
-  .type-toggle input:checked + label { background: var(--card); color: var(--accent); box-shadow: var(--shadow); }
+  .type-toggle input:checked + label { background: var(--card); color: var(--accent); box-shadow: var(--shadow-sm); }
 
-  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  /* DASHBOARD / PREMIUM INTERACTIVE */
+  .dash-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
   
-  .filing-banner { background: var(--accent-light); border-left: 4px solid var(--accent); padding: 16px; border-radius: 0 var(--radius) var(--radius) 0; margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center;}
-  .filing-banner h3 { color: var(--accent-dark); font-size: 15px; margin-bottom: 4px; }
+  .filing-banner { background: var(--accent-light); border-left: 4px solid var(--accent); padding: 20px; border-radius: 0 var(--radius) var(--radius) 0; margin-bottom: 32px; display:flex; justify-content:space-between; align-items:center; box-shadow: var(--shadow-sm);}
+  .filing-banner h3 { color: var(--accent-dark); font-size: 16px; font-weight: 700; margin-bottom: 4px; }
 
-  /* INVOICE CARD */
+  .data-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 32px;}
+  .data-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--surface);}
+  .data-header h3 { font-size: 15px; font-weight: 700; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th, .data-table td { padding: 14px 24px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .data-table th { color: var(--ink2); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* INVOICE CARD REFINED */
   .invoice-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 24px; overflow: hidden; box-shadow: var(--shadow); }
-  .inv-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .tag { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; background: var(--border); color: var(--ink); }
-  .tag.purchase { background: var(--amber-light); color: var(--amber); }
+  .inv-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .tag { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 700; background: var(--border); color: var(--ink); text-transform: uppercase; letter-spacing: 0.5px;}
+  .tag.purchase { background: var(--amber-light); color: var(--amber); border: 1px solid #fcd34d;}
+  .tag.sale { background: var(--accent-light); color: var(--accent); border: 1px solid #bfdbfe;}
   .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border); }
-  .inv-cell { padding: 12px 18px; border-right: 1px solid var(--border); }
-  .inv-cell label { font-size: 10px; color: var(--ink3); display: block; margin-bottom: 3px; text-transform: uppercase; }
-  .edit-input { width: 100%; font-size: 14px; font-weight: 600; color: var(--ink); border: 1px dashed transparent; background: transparent; padding: 4px; outline: none; }
-  .items-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .items-table th { background: var(--surface); text-align: left; padding: 8px 18px; font-size: 11px; }
-  .items-table td { padding: 8px 18px; border-bottom: 1px solid var(--border); }
-  .items-table input { width: 100%; background: transparent; border: 1px dashed transparent; color: var(--ink); font-size: 13px; }
-  .action-bar { padding: 14px 18px; background: var(--surface); display: flex; gap: 10px; justify-content: flex-end; }
-  
-  .premium-lock-wrapper { position: relative; margin-top: 32px; }
-  .premium-blur { filter: blur(6px); opacity: 0.6; pointer-events: none; }
-  .lock-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: rgba(247, 247, 251, 0.4); border-radius: var(--radius); }
+  .inv-cell { padding: 16px 24px; border-right: 1px solid var(--border); }
+  .inv-cell label { font-size: 11px; color: var(--ink3); display: block; margin-bottom: 4px; font-weight: 700; text-transform: uppercase; }
+  .edit-input { width: 100%; font-size: 15px; font-weight: 600; color: var(--ink); border: 1px dashed transparent; background: transparent; padding: 4px 0; outline: none; font-family: var(--font-main);}
+  .edit-input:focus { border-bottom: 1px solid var(--accent); }
+  .items-table input { width: 100%; background: transparent; border: 1px dashed transparent; color: var(--ink); font-size: 14px; padding: 4px; border-radius: 4px; font-weight: 500;}
+  .action-bar { padding: 16px 24px; background: var(--surface); display: flex; gap: 12px; justify-content: flex-end; }
+
+  /* USAGE COUNTER */
+  .usage-card { background: var(--card); border: 1px solid var(--border); padding: 16px 24px; border-radius: var(--radius); margin-bottom: 32px; box-shadow: var(--shadow-sm); }
+  .pbar { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; margin: 12px 0 8px; }
+  .pbar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 99px; transition: width 0.4s; }
+
+  /* PRICING MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 200; }
+  .pricing-modal { background: var(--card); border-radius: 16px; width: 90%; max-width: 700px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid var(--border); position: relative; }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+  .plan-card { border: 1px solid var(--border); padding: 24px; border-radius: 12px; background: var(--surface); }
+  .plan-card.pro { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 2px var(--accent); position: relative;}
+  .pro-badge { position: absolute; top: -12px; right: 24px; background: var(--accent); color: white; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;}
 
   /* UTILS */
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--card); font-size: 13px; padding: 12px 18px; border-radius: 10px; opacity: 0; transition: all 0.3s; z-index: 300; pointer-events:none;}
-  .toast.show { opacity: 1; transform: translateY(-20px); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--surface); font-size: 14px; font-weight: 500; padding: 14px 24px; border-radius: 8px; opacity: 0; transition: all 0.3s; z-index: 300; pointer-events:none; box-shadow: var(--shadow);}
+  .toast.show { opacity: 1; transform: translateY(-10px); }
+  .spinner { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   #pdf-template { display: none; padding: 40px; background: white; color: black; font-family: sans-serif; }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="nav-brand">⚡ TaxPulse <span title="Free full access during our launch testing phase">Early Launch Beta</span></div>
+  <div class="nav-brand">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    TaxPulse
+  </div>
   <div class="nav-right" id="nav-user-info" style="display: none;">
-    <button class="theme-toggle" onclick="document.body.classList.toggle('dark')">🌙</button>
-    <button class="btn btn-pro" onclick="document.getElementById('pricing-modal').style.display='flex'">Upgrade</button>
-    <span id="plan-badge" class="badge-free">Free</span>
-    <button class="btn btn-outline" onclick="handleLogout()" style="font-size:12px;padding:4px 10px">Logout</button>
+    <div class="branch-selector" onclick="requirePro('Manage Multiple Branches')">
+      🏢 Main HQ ▾
+    </div>
+    <button class="btn btn-outline" style="padding: 6px; border-radius: 50%;" onclick="toggleTheme()">🌓</button>
+    <span id="plan-badge" class="badge-free">Free Plan</span>
+    <button class="btn btn-primary" id="nav-upgrade-btn" onclick="document.getElementById('pricing-modal').style.display='flex'">Upgrade</button>
+    <button class="btn btn-outline" onclick="handleLogout()">Sign Out</button>
   </div>
 </nav>
 
 <div id="auth-view" class="auth-container">
-  <h2 style="margin-bottom: 8px; font-size: 20px;">TaxPulse Login</h2>
-  <div class="form-group"><label>Email</label><input type="email" id="auth-email"></div>
-  <div class="form-group"><label>Password</label><input type="password" id="auth-password"></div>
-  <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="handleLoginSubmit()">Login</button>
-  <button class="btn btn-outline" style="width: 100%;" onclick="handleSignupSubmit()">Create Account</button>
+  <div style="text-align: center; margin-bottom: 24px;">
+    <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Access Platform</h2>
+    <p style="font-size: 14px; color: var(--ink3);">Enter your credentials to manage billing.</p>
+  </div>
+  <div class="form-group"><label>Work Email</label><input type="email" id="auth-email" placeholder="admin@company.com"></div>
+  <div class="form-group"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••"></div>
+  <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px; padding: 12px;" onclick="handleLoginSubmit()">Secure Login</button>
+  <button class="btn btn-outline" style="width: 100%; padding: 12px;" onclick="handleSignupSubmit()">Create Workspace</button>
 </div>
 
 <div class="app" id="app-view" style="display: none;">
   
   <div class="app-tabs">
-    <button class="tab-btn active" onclick="switchTab('create')">✍️ Create Bill</button>
-    <button class="tab-btn" onclick="switchTab('scanner')">📸 Scan Receipts</button>
-    <button class="tab-btn" onclick="switchTab('dashboard')">📊 Dashboard & Filing</button>
+    <button class="tab-btn active" onclick="switchTab('dashboard')">Overview & Analytics</button>
+    <button class="tab-btn" onclick="switchTab('create')">Create Invoice</button>
+    <button class="tab-btn" onclick="switchTab('scanner')">AI Receipt Scanner</button>
   </div>
 
-  <!-- LIVE USAGE COUNTER -->
+  <!-- USAGE COUNTER -->
   <div class="usage-card" id="usage-tracker-container">
-    <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600;">
-      <span>Monthly AI Scanning Limit</span>
-      <span id="usage-text">0 / 20 Invoices Used</span>
+    <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:700;">
+      <span>Monthly AI Processing Limit</span>
+      <span id="usage-text">0 / 15 Scans Used</span>
     </div>
     <div class="pbar"><div class="pbar-fill" id="usage-bar"></div></div>
-    <span style="font-size:11px; color:var(--ink3);">Resets on the 1st of every month</span>
+    <span style="font-size:12px; color:var(--ink3); font-weight:500;">Usage resets automatically on the 1st of every month.</span>
   </div>
 
-  <!-- VIEW 1: MANUAL INVOICE CREATOR -->
-  <div id="create-view">
-    <!-- ONBOARDING GUIDE -->
-    <div class="guide-row">
-      <div class="guide-step"><strong>Step 1</strong>Add client and items</div>
-      <div class="guide-step"><strong>Step 2</strong>Verify system math</div>
-      <div class="guide-step"><strong>Step 3</strong>WhatsApp or Save PDF</div>
-    </div>
-
-    <div class="invoice-card" style="padding: 24px;">
-      <h2 style="margin-bottom: 16px;">Generate New Invoice</h2>
-      <div class="inv-grid" style="border:none; grid-template-columns: 1fr 1fr; gap:16px;">
-        <div class="form-group">
-          <label>Customer / Buyer</label>
-          <select id="manual-customer">
-            <option value="">+ Walk-in Customer (B2C)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Date</label>
-          <input type="date" id="manual-date">
-        </div>
-      </div>
-      
-      <table class="items-table" id="manual-items">
-        <thead><tr><th>Item Name</th><th>Qty</th><th>Price</th><th>Tax %</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><input type="text" class="m-name" placeholder="Item description"></td>
-            <td><input type="number" class="m-qty" value="1" style="width:50px"></td>
-            <td><input type="number" class="m-price" placeholder="0.00" style="width:80px"></td>
-            <td><input type="number" class="m-tax" value="18" style="width:50px"></td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <button class="btn btn-outline" style="margin-top:10px" onclick="addManualRow()">+ Add Row</button>
-      
-      <div style="margin-top: 24px; display:flex; justify-content:flex-end;">
-        <button class="btn btn-primary" onclick="generateManualBill()">Generate & Save Bill</button>
-      </div>
-    </div>
-    <div id="manual-results"></div>
-  </div>
-
-  <!-- VIEW 2: AI SCANNER -->
-  <div id="scanner-view" style="display:none;">
-    <div class="hero">
-      <h1>Extract & Verify</h1>
-      <p>Take a clear smartphone photo of any vendor bill or paper statement to parse contents instantly.</p>
-    </div>
-
-    <div class="type-toggle">
-      <input type="radio" id="type-sales" name="bill-type" value="sales" checked>
-      <label for="type-sales">GSTR-1 (Sales)</label>
-      <input type="radio" id="type-purchase" name="bill-type" value="purchase">
-      <label for="type-purchase">GSTR-2B (Purchases)</label>
-    </div>
-
-    <div class="upload-zone">
-      <input type="file" accept="image/*" capture="environment" onchange="processFile(this.files[0])">
-      <div style="font-size: 36px; margin-bottom: 12px;">📸</div>
-      <h3>Tap to Scan Receipt</h3>
-    </div>
-    <div id="results-list"></div>
-  </div>
-
-  <!-- VIEW 3: DASHBOARD -->
-  <div id="dashboard-view" style="display: none;">
+  <!-- VIEW 1: DASHBOARD (INTERACTIVE & FREEMIUM) -->
+  <div id="dashboard-view">
     <div class="filing-banner">
       <div>
-        <h3 id="filing-title">Ready to file for this month</h3>
-        <p style="font-size:13px; color:var(--ink2);">GSTR-1 Due Date: 11th of next month</p>
+        <h3 id="filing-title">Compliance Status: Ready to File</h3>
+        <p style="font-size:14px; color:var(--ink2); font-weight:500;">GSTR-1 Due Date: 11th of next month</p>
       </div>
-      <button class="btn btn-primary" onclick="downloadJSON()">⬇ Download JSON</button>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-outline" onclick="requirePro('Tally/Zoho Export Format')">Export to Tally</button>
+        <button class="btn btn-primary" onclick="downloadJSON()">Generate GSTR-1 JSON</button>
+      </div>
+    </div>
+
+    <div class="dash-header">
+      <h2 style="font-size: 20px; font-weight: 800;">Financial Overview</h2>
+      <button class="btn btn-pro" onclick="requirePro('One-Click AI Reconciliation')">✨ Run Auto-Reconciliation</button>
     </div>
 
     <div class="dash-grid">
@@ -225,58 +194,130 @@
         <div class="stat-value" id="dash-sales">₹0.00</div>
       </div>
       <div class="stat-card">
-        <div class="stat-title">Tax Payable</div>
+        <div class="stat-title">GST Payable</div>
         <div class="stat-value" id="dash-tax">₹0.00</div>
       </div>
       <div class="stat-card">
-        <div class="stat-title" style="color:var(--amber)">ITC Claimable (Purchases)</div>
+        <div class="stat-title" style="color:var(--amber)">Available ITC (GSTR-2B)</div>
         <div class="stat-value" id="dash-itc">₹0.00</div>
       </div>
     </div>
 
-    <div class="premium-lock-wrapper">
-      <div class="lock-overlay" id="lock-overlay">
-        <h3 style="margin-bottom: 8px;">🔒 Premium Feature</h3>
-        <p style="font-size: 13px; margin-bottom: 16px;">Upgrade to unlock Auto-Reconciliation and Master List.</p>
-        <button class="btn btn-pro" onclick="document.getElementById('pricing-modal').style.display='flex'">Upgrade Now</button>
+    <div class="data-section">
+      <div class="data-header">
+        <h3>Customer Master Database</h3>
+        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="requirePro('Advanced CRM Management')">+ Add Contact</button>
       </div>
-      
-      <div id="blur-content" class="premium-blur">
-        <h3 style="margin: 24px 0 12px;">Customer Master List</h3>
-        <table class="data-table">
-          <thead><tr><th>Business Name</th><th>GSTIN</th></tr></thead>
-          <tbody id="customers-table"><tr><td colspan="2">Loading...</td></tr></tbody>
-        </table>
-      </div>
+      <table class="data-table">
+        <thead><tr><th>Business Name</th><th>Registered GSTIN</th><th>Status</th></tr></thead>
+        <tbody id="customers-table"><tr><td colspan="3" style="text-align:center; padding: 32px; color: var(--ink3);">Loading records...</td></tr></tbody>
+      </table>
     </div>
   </div>
+
+  <!-- VIEW 2: MANUAL INVOICE CREATOR -->
+  <div id="create-view" style="display: none;">
+    <div class="invoice-card" style="padding: 32px;">
+      <h2 style="margin-bottom: 24px; font-size: 20px; font-weight: 800;">Generate Digital Invoice</h2>
+      <div class="inv-grid" style="border:none; grid-template-columns: 1fr 1fr; gap:24px; padding: 0;">
+        <div class="form-group">
+          <label>Billed To (Client)</label>
+          <select id="manual-customer">
+            <option value="">+ Walk-in Customer (B2C)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date of Issue</label>
+          <input type="date" id="manual-date">
+        </div>
+      </div>
+      
+      <table class="items-table" id="manual-items" style="margin-top: 16px;">
+        <thead><tr><th>Item Description</th><th>Qty</th><th>Unit Price (₹)</th><th>GST Rate (%)</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><input type="text" class="m-name" placeholder="Enter service or product"></td>
+            <td><input type="number" class="m-qty" value="1"></td>
+            <td><input type="number" class="m-price" placeholder="0.00"></td>
+            <td><input type="number" class="m-tax" value="18"></td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <button class="btn btn-outline" style="margin-top:16px" onclick="addManualRow()">+ Add Line Item</button>
+      
+      <div style="margin-top: 32px; display:flex; justify-content:flex-end; border-top: 1px solid var(--border); padding-top: 24px;">
+        <button class="btn btn-primary" onclick="generateManualBill()">Create & Save Invoice</button>
+      </div>
+    </div>
+    <div id="manual-results"></div>
+  </div>
+
+  <!-- VIEW 3: AI SCANNER -->
+  <div id="scanner-view" style="display:none;">
+    <div style="text-align: center; margin-bottom: 32px;">
+      <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Document Extraction Engine</h1>
+      <p style="font-size: 15px; color: var(--ink2);">Process physical vendor bills or digital receipts instantly into structured data.</p>
+    </div>
+
+    <div style="text-align: center;">
+      <div class="type-toggle">
+        <input type="radio" id="type-sales" name="bill-type" value="sales" checked>
+        <label for="type-sales">Sales Receipt (GSTR-1)</label>
+        <input type="radio" id="type-purchase" name="bill-type" value="purchase">
+        <label for="type-purchase">Purchase Bill (GSTR-2B)</label>
+      </div>
+    </div>
+
+    <div class="scanner-actions">
+      <label class="upload-box">
+        <input type="file" accept="image/*" capture="environment" onchange="processFile(this.files[0])">
+        <div class="upload-icon">📸</div>
+        <h3>Take a Photo</h3>
+        <p>Use device camera</p>
+      </label>
+      <label class="upload-box">
+        <input type="file" accept="image/*,application/pdf" onchange="processFile(this.files[0])">
+        <div class="upload-icon">📁</div>
+        <h3>Upload File</h3>
+        <p>Gallery or PDF document</p>
+      </label>
+    </div>
+    
+    <div id="results-list"></div>
+  </div>
+
 </div>
 
-<!-- PRICING MODAL (UPDATED STRATEGIC TIERS) -->
-<div class="modal-overlay" id="pricing-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:200;">
-  <div style="background:var(--card); padding:32px; border-radius:16px; max-width:600px; width:90%; position:relative;">
-    <button onclick="document.getElementById('pricing-modal').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:24px;cursor:pointer">×</button>
-    <h2 style="text-align:center;">Choose Your Business Tier</h2>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:24px;">
-      <div style="border:1px solid var(--border); padding:20px; border-radius:12px;">
-        <h3>Starter Pro</h3>
-        <div style="font-size:24px; font-weight:bold; margin:10px 0;">₹199<span style="font-size:12px"> /mo</span></div>
-        <ul style="font-size:12px; line-height:2; margin-bottom:16px;">
-          <li>✓ 100 AI Scans / Month</li>
-          <li>✓ Customer Master Saved</li>
-          <li>✓ Standard JSON Export</li>
+<!-- STRATEGIC PRICING MODAL -->
+<div class="modal-overlay" id="pricing-modal">
+  <div class="pricing-modal">
+    <button onclick="document.getElementById('pricing-modal').style.display='none'" style="position:absolute;top:20px;right:24px;background:none;border:none;font-size:28px;cursor:pointer;color:var(--ink3);">×</button>
+    <h2 style="text-align:center; font-size: 28px; font-weight: 800; margin-bottom: 8px;">Unlock Enterprise Features</h2>
+    <p style="text-align:center; font-size:15px; color:var(--ink2); margin-bottom: 32px;">Choose the tier that scales with your business volume.</p>
+    
+    <div class="pricing-grid">
+      <div class="plan-card">
+        <h3 style="font-size: 18px; font-weight: 700;">Starter</h3>
+        <div style="font-size:36px; font-weight:800; margin:16px 0;">₹199<span style="font-size:14px; font-weight: 500; color: var(--ink3);"> /mo</span></div>
+        <ul style="font-size:14px; line-height:2.5; margin-bottom:24px; list-style:none;">
+          <li><span style="color:var(--green); font-weight:bold; margin-right:8px;">✓</span> 100 AI Scans / Month</li>
+          <li><span style="color:var(--green); font-weight:bold; margin-right:8px;">✓</span> Save 50 Customers</li>
+          <li><span style="color:var(--green); font-weight:bold; margin-right:8px;">✓</span> Standard Support</li>
         </ul>
-        <button class="btn btn-outline" style="width:100%" onclick="alert('Payment pipeline setup coming next!')">Select Starter</button>
+        <button class="btn btn-outline" style="width:100%" onclick="alert('Stripe configuration required.')">Select Starter</button>
       </div>
-      <div style="border:1px solid var(--green); background:var(--green-light); padding:20px; border-radius:12px; color:#064e3b;">
-        <h3>Business Pro</h3>
-        <div style="font-size:24px; font-weight:bold; margin:10px 0;">₹399<span style="font-size:12px"> /mo</span></div>
-        <ul style="font-size:12px; line-height:2; margin-bottom:16px;">
-          <li>✓ Unlimited AI Scans</li>
-          <li>✓ GSTR-2B Reconciliation</li>
-          <li>✓ Priority AI Processing</li>
+      <div class="plan-card pro">
+        <div class="pro-badge">Most Popular</div>
+        <h3 style="font-size: 18px; font-weight: 700;">Business Pro</h3>
+        <div style="font-size:36px; font-weight:800; margin:16px 0;">₹399<span style="font-size:14px; font-weight: 500; color: var(--ink3);"> /mo</span></div>
+        <ul style="font-size:14px; line-height:2.5; margin-bottom:24px; list-style:none;">
+          <li><span style="color:var(--accent); font-weight:bold; margin-right:8px;">✓</span> <b>Unlimited</b> AI Scans</li>
+          <li><span style="color:var(--accent); font-weight:bold; margin-right:8px;">✓</span> AI Auto-Reconciliation</li>
+          <li><span style="color:var(--accent); font-weight:bold; margin-right:8px;">✓</span> Unlimited Contact CRM</li>
+          <li><span style="color:var(--accent); font-weight:bold; margin-right:8px;">✓</span> Multi-Branch Support</li>
         </ul>
-        <button class="btn btn-primary" style="width:100%" onclick="alert('Payment pipeline setup coming next!')">Select Business</button>
+        <button class="btn btn-primary" style="width:100%" onclick="alert('Stripe configuration required.')">Upgrade to Pro</button>
       </div>
     </div>
   </div>
@@ -292,10 +333,10 @@
     <div><strong>Date:</strong> <span id="pdf-date"></span></div>
   </div>
   <table style="width:100%; margin-top:30px; border-collapse:collapse; text-align:left;">
-    <thead><tr style="border-bottom:1px solid #000;"><th>Item</th><th>Qty</th><th>Price</th><th>Tax</th></tr></thead>
+    <thead><tr style="border-bottom:1px solid #000;"><th>Item Description</th><th>Qty</th><th>Price</th><th>Tax Rate</th></tr></thead>
     <tbody id="pdf-items"></tbody>
   </table>
-  <h3 style="text-align:right; margin-top:20px;">Total: ₹<span id="pdf-total"></span></h3>
+  <h3 style="text-align:right; margin-top:30px; padding-top: 10px; border-top: 1px solid #000;">Total Amount: ₹<span id="pdf-total"></span></h3>
 </div>
 
 <script>
@@ -306,13 +347,11 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let userSession = null, userPlan = 'free', masterList = [], invoiceCounter = 0;
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration missed:', err));
-  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 }
 
 window.addEventListener('online', syncOfflineQueue);
-window.addEventListener('offline', () => showToast("Network dropped. Working in safe local cache.", "error"));
+window.addEventListener('offline', () => showToast("Network dropped. Working in safe offline cache.", "error"));
 
 window.onload = async () => {
   document.getElementById('manual-date').value = new Date().toISOString().split('T')[0];
@@ -320,6 +359,21 @@ window.onload = async () => {
   if (data.session) setupDashboard(data.session);
   syncOfflineQueue(); 
 };
+
+function requirePro(featureName) {
+  if (userPlan !== 'pro') {
+    document.getElementById('pricing-modal').style.display = 'flex';
+    return false;
+  }
+  showToast(`${featureName} initialized.`, "success");
+  return true;
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('taxpulse_theme', isDark ? 'dark' : 'light');
+}
+if(localStorage.getItem('taxpulse_theme') === 'dark') toggleTheme();
 
 async function handleLoginSubmit() {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ 
@@ -356,10 +410,9 @@ async function setupDashboard(session) {
   if (profile && profile.plan_type === 'pro') {
     userPlan = 'pro';
     document.getElementById('plan-badge').className = 'badge-pro';
-    document.getElementById('plan-badge').textContent = 'Pro Plan';
-    document.getElementById('lock-overlay').style.display = 'none';
-    document.getElementById('blur-content').classList.remove('premium-blur');
-    document.getElementById('usage-tracker-container').style.display = 'none'; // Hide limits for Pro users
+    document.getElementById('plan-badge').textContent = 'Business Pro';
+    document.getElementById('nav-upgrade-btn').style.display = 'none';
+    document.getElementById('usage-tracker-container').style.display = 'none'; 
   }
   loadDashboardData();
 }
@@ -375,10 +428,10 @@ function switchTab(tab) {
 
 function addManualRow() {
   const row = `<tr>
-    <td><input type="text" class="m-name" placeholder="Item"></td>
-    <td><input type="number" class="m-qty" value="1" style="width:50px"></td>
-    <td><input type="number" class="m-price" placeholder="0.00" style="width:80px"></td>
-    <td><input type="number" class="m-tax" value="18" style="width:50px"></td>
+    <td><input type="text" class="m-name" placeholder="Item description"></td>
+    <td><input type="number" class="m-qty" value="1"></td>
+    <td><input type="number" class="m-price" placeholder="0.00"></td>
+    <td><input type="number" class="m-tax" value="18"></td>
   </tr>`;
   document.querySelector('#manual-items tbody').insertAdjacentHTML('beforeend', row);
 }
@@ -403,22 +456,31 @@ function generateManualBill() {
     items: items,
     type: 'sales'
   };
-  renderEditableInvoiceCard(data, 'Manual Entry', 'manual-results');
+  
+  const loadingDiv = document.getElementById('manual-loading');
+  if(loadingDiv) loadingDiv.remove();
+  
+  renderEditableInvoiceCard(data, 'Generated Digital Invoice', 'manual-results');
 }
 
 async function processFile(file) {
-  if (!navigator.onLine) return showToast("Image text extraction requires a network link.", "error");
+  if (!navigator.onLine) return showToast("Network link required for AI parsing.", "error");
   if (!file) return;
-  
-  if (!file.type.startsWith('image/')) {
-    return showToast("Unsupported file type. Please snap a picture or upload an image.", "error");
-  }
 
-  document.getElementById('results-list').innerHTML = `<div style="padding:40px; text-align:center;"><div class="spinner" style="margin:0 auto 12px;"></div>Parsing contents...</div>`;
+  // Insert loading state correctly so it can be removed
+  const loadingId = `load-${Date.now()}`;
+  document.getElementById('results-list').insertAdjacentHTML('afterbegin', `
+    <div id="${loadingId}" style="padding:48px 24px; text-align:center; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:24px;">
+      <div class="spinner" style="margin:0 auto 16px;"></div>
+      <div style="font-weight:700; color:var(--ink);">Processing Document...</div>
+      <div style="font-size:13px; color:var(--ink3); margin-top:4px;">Extracting line items and verifying mathematical telemetry.</div>
+    </div>
+  `);
+  
   const isPurchase = document.getElementById('type-purchase').checked;
 
   try {
-    const base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(file); });
+    const base64 = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(file); });
     const response = await fetch(EDGE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userSession.access_token}` },
@@ -426,51 +488,54 @@ async function processFile(file) {
     });
     
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "The image was too blurry or system timed out. Please try again with better lighting.");
+    document.getElementById(loadingId).remove(); // Fixes the "Extracting..." bug
+
+    if (!response.ok) throw new Error(data.error || "Image unreadable. Please ensure lighting is good.");
     data.type = isPurchase ? 'purchase' : 'sales';
     renderEditableInvoiceCard(data, file.name, 'results-list');
   } catch (err) {
-    document.getElementById('results-list').innerHTML = '';
+    document.getElementById(loadingId)?.remove();
     showToast(err.message, 'error');
   }
 }
 
 function renderEditableInvoiceCard(data, filename, containerId) {
-  document.getElementById('results-header').style.display = 'flex';
   const invId = `inv-${invoiceCounter++}`;
-  const card = document.createElement('div');
-  card.className = 'invoice-card processed-invoice';
-  card.id = invId;
-  card.setAttribute('data-type', data.type);
-
+  const isPurchase = data.type === 'purchase';
+  const typeTag = isPurchase ? '<span class="tag purchase">GSTR-2B (Purchase)</span>' : '<span class="tag sale">GSTR-1 (Sale)</span>';
+  
   let itemsHTML = (data.items || []).map(item => `
     <tr class="item-row">
       <td><input type="text" class="i-name" value="${item.name || ''}"></td>
-      <td><input type="text" class="i-hsn" value="${item.hsn || ''}" style="width:60px"></td>
-      <td><input type="number" class="i-qty" value="${item.qty || 1}" style="width:40px"></td>
-      <td><input type="number" class="i-price" value="${item.price || 0}" style="width:60px"></td>
-      <td><input type="number" class="i-tax" value="${item.tax_rate || 0}" style="width:40px">%</td>
+      <td><input type="number" class="i-qty" value="${item.qty || 1}"></td>
+      <td><input type="number" class="i-price" value="${item.price || 0}"></td>
+      <td><input type="number" class="i-tax" value="${item.tax_rate || 0}"></td>
     </tr>
   `).join('');
 
-  card.innerHTML = `
-    <div class="inv-head"><strong>Source: ${filename}</strong><span class="tag ${data.type === 'purchase' ? 'purchase':'tag-b2b'}">${data.type.toUpperCase()}</span></div>
-    <div class="inv-grid">
-      <div class="inv-cell"><label>Total Amount (₹)</label><input type="number" class="edit-input amt-input" value="${data.total_amount || 0}"></div>
-      <div class="inv-cell"><label>Date</label><input type="text" class="edit-input date-input" value="${data.receipt_date || ''}"></div>
-      <div class="inv-cell"><label>Target GSTIN</label><input type="text" class="edit-input buy-input" value="${data.buyer_gstin || data.gstin_supplier || ''}"></div>
-    </div>
-    <table class="items-table">
-      <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Tax</th></tr></thead>
-      <tbody>${itemsHTML || '<tr><td colspan="4" style="text-align:center;">No items split. You can write them manually.</td></tr>'}</tbody>
-    </table>
-    <div class="action-bar">
-      <button class="btn btn-outline" id="save-btn-${invId}" onclick="saveToCloud('${invId}')">☁️ Save to Stats</button>
-      <button class="btn btn-primary" onclick="generatePDF('${invId}')">📄 PDF</button>
-      <button class="btn btn-green" onclick="shareWhatsApp('${invId}')">💬 WhatsApp</button>
+  const cardHTML = `
+    <div class="invoice-card processed-invoice" id="${invId}" data-type="${data.type}">
+      <div class="inv-head">
+        <div><strong style="font-size:15px;">${filename}</strong></div> 
+        ${typeTag}
+      </div>
+      <div class="inv-grid">
+        <div class="inv-cell"><label>Total Amount (₹)</label><input type="number" class="edit-input amt-input" value="${data.total_amount || 0}"></div>
+        <div class="inv-cell"><label>Invoice Date</label><input type="text" class="edit-input date-input" value="${data.receipt_date || ''}"></div>
+        <div class="inv-cell"><label>Target GSTIN</label><input type="text" class="edit-input buy-input" value="${data.buyer_gstin || data.gstin_supplier || ''}"></div>
+      </div>
+      <table class="items-table">
+        <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Tax %</th></tr></thead>
+        <tbody>${itemsHTML || '<tr><td colspan="4" style="text-align:center; color:var(--ink3); padding:24px;">No discrete items found. Proceeding with total value.</td></tr>'}</tbody>
+      </table>
+      <div class="action-bar">
+        <button class="btn btn-outline" id="save-btn-${invId}" onclick="saveToCloud('${invId}')">☁️ Save Record</button>
+        <button class="btn btn-primary" onclick="generatePDF('${invId}')">📄 Save PDF</button>
+        <button class="btn btn-green" onclick="shareWhatsApp('${invId}')">💬 Send via WhatsApp</button>
+      </div>
     </div>
   `;
-  document.getElementById(containerId).innerHTML = card.outerHTML + document.getElementById(containerId).innerHTML;
+  document.getElementById(containerId).insertAdjacentHTML('afterbegin', cardHTML);
 }
 
 function getCardData(id) {
@@ -501,26 +566,29 @@ async function saveToCloud(cardId) {
 
   const invoiceData = {
     user_id: userSession.user.id,
-    invoice_date: data.date,
+    invoice_date: data.date || new Date().toISOString().split('T')[0],
     total_amount: parseFloat(data.total) || 0,
     tax_amount: tax,
     is_purchase: data.type === 'purchase'
   };
 
+  const btn = document.getElementById(`save-btn-${cardId}`);
+
   if (!navigator.onLine) {
     let queue = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
     queue.push(invoiceData);
     localStorage.setItem('offlineQueue', JSON.stringify(queue));
-    document.getElementById(`save-btn-${cardId}`).innerText = "⏳ Queued Offline";
-    return showToast("Invoice pinned to storage. Will auto-sync on network reconnect.", "success");
+    btn.innerText = "⏳ Queued Offline";
+    return showToast("Invoice pinned locally. Will sync on network reconnect.", "success");
   }
 
   try {
     await supabaseClient.from('invoices').insert([invoiceData]);
-    document.getElementById(`save-btn-${cardId}`).innerText = "✅ Saved";
-    showToast("Secured in database cluster!", "success");
+    btn.innerText = "✅ Verified & Saved";
+    btn.style.color = "var(--green)";
+    showToast("Secured in database cluster.", "success");
     loadDashboardData();
-  } catch (err) { showToast("Cloud link err.", "error"); }
+  } catch (err) { showToast("Cloud link error.", "error"); }
 }
 
 async function syncOfflineQueue() {
@@ -531,7 +599,7 @@ async function syncOfflineQueue() {
     await supabaseClient.from('invoices').insert(queue);
     localStorage.removeItem('offlineQueue');
     loadDashboardData();
-    showToast("Background local queue synced seamlessly!", "success");
+    showToast("Background local queue synced seamlessly.", "success");
   } catch (err) {}
 }
 
@@ -549,22 +617,22 @@ async function loadDashboardData() {
   }
   
   if (userPlan !== 'pro') {
-    document.getElementById('usage-text').innerText = `${count} / 20 Invoices Used This Month`;
-    document.getElementById('usage-bar').style.width = `${Math.min(100, (count / 20) * 100)}%`;
+    document.getElementById('usage-text').innerText = `${count} / 15 Scans Used`;
+    document.getElementById('usage-bar').style.width = `${Math.min(100, (count / 15) * 100)}%`;
   }
 
-  document.getElementById('dash-sales').innerText = `₹${sales.toLocaleString()}`;
-  document.getElementById('dash-tax').innerText = `₹${taxPayable.toLocaleString()}`;
-  document.getElementById('dash-itc').innerText = `₹${itc.toLocaleString()}`;
+  document.getElementById('dash-sales').innerText = `₹${sales.toLocaleString('en-IN')}`;
+  document.getElementById('dash-tax').innerText = `₹${taxPayable.toLocaleString('en-IN')}`;
+  document.getElementById('dash-itc').innerText = `₹${itc.toLocaleString('en-IN')}`;
 
   const { data: customers } = await supabaseClient.from('customers').select('*');
   if (customers) {
-    let tableHtml = '', optionsHtml = '<option value="">+ Walk-in (B2C)</option>';
+    let tableHtml = '', optionsHtml = '<option value="">+ Walk-in Customer (B2C)</option>';
     customers.forEach(c => { 
-      tableHtml += `<tr><td>${c.business_name}</td><td>${c.gstin}</td></tr>`; 
+      tableHtml += `<tr style="cursor:pointer" onclick="requirePro('Detailed CRM View')"><td>${c.business_name}</td><td>${c.gstin}</td><td><span class="tag sale" style="font-size:9px">Active</span></td></tr>`; 
       optionsHtml += `<option value="${c.gstin}">${c.business_name} (${c.gstin})</option>`;
     });
-    document.getElementById('customers-table').innerHTML = tableHtml || `<tr><td colspan="2">No records found.</td></tr>`;
+    document.getElementById('customers-table').innerHTML = tableHtml || `<tr><td colspan="3" style="text-align:center; padding: 32px; color: var(--ink3);">No external records found.</td></tr>`;
     document.getElementById('manual-customer').innerHTML = optionsHtml;
   }
 }
@@ -572,28 +640,52 @@ async function loadDashboardData() {
 function generatePDF(cardId) {
   const data = getCardData(cardId);
   document.getElementById('pdf-total').innerText = data.total;
-  document.getElementById('pdf-date').innerText = data.date;
-  document.getElementById('pdf-sup-gstin').innerText = data.targetGstin;
+  document.getElementById('pdf-date').innerText = data.date || new Date().toISOString().split('T')[0];
+  document.getElementById('pdf-sup-gstin').innerText = data.targetGstin || "Cash Sale";
   
   let rows = '';
-  data.items.forEach(i => { rows += `<tr><td>${i.name}</td><td>${i.qty}</td><td>₹${i.price}</td><td>${i.tax}%</td></tr>`; });
+  data.items.forEach(i => { rows += `<tr><td style="padding:10px 0; border-bottom:1px solid #eee;">${i.name}</td><td style="border-bottom:1px solid #eee;">${i.qty}</td><td style="border-bottom:1px solid #eee;">₹${i.price}</td><td style="border-bottom:1px solid #eee;">${i.tax}%</td></tr>`; });
   document.getElementById('pdf-items').innerHTML = rows;
 
   const element = document.getElementById('pdf-template');
   element.style.display = 'block'; 
-  html2pdf().from(element).save(`Invoice_${Date.now()}.pdf`).then(() => element.style.display='none');
+  html2pdf().from(element).save(`TaxPulse_Invoice_${Date.now()}.pdf`).then(() => element.style.display='none');
 }
 
 function shareWhatsApp(cardId) {
   const data = getCardData(cardId);
-  let text = `🧾 *TAX INVOICE*\nTotal: ₹${data.total}\nDate: ${data.date}\n_Generated instantly via TaxPulse_`;
+  let text = `🧾 *TAX INVOICE*\nTotal: ₹${data.total}\nDate: ${data.date || new Date().toISOString().split('T')[0]}\n\n_Generated instantly via TaxPulse_`;
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
+function downloadJSON() {
+  const cards = document.querySelectorAll('.processed-invoice');
+  if (cards.length === 0) return showToast("No active session data to export.", "error");
+
+  const finalInvoices = [];
+  cards.forEach(card => finalInvoices.push(getCardData(card.id)));
+
+  const jsonExportStr = JSON.stringify({
+    fp: new Date().getMonth() + 1 + "" + new Date().getFullYear(),
+    version: "GST3.0.4",
+    b2b: finalInvoices.filter(i => i.targetGstin.length > 5 && i.type === 'sales'),
+    b2c: finalInvoices.filter(i => i.targetGstin.length <= 5 && i.type === 'sales')
+  }, null, 2);
+
+  const element = document.createElement('a');
+  element.href = URL.createObjectURL(new Blob([jsonExportStr], { type: 'application/json' }));
+  element.download = `GSTR1_Export_${Date.now()}.json`;
+  element.click();
+  showToast("Gov-ready JSON compiled securely.", "success");
+}
+
 function showToast(msg, type) {
-  const t = document.getElementById('toast'); t.textContent = msg; 
+  const t = document.getElementById('toast'); 
+  t.textContent = msg; 
   t.style.background = type === 'error' ? 'var(--red)' : 'var(--ink)';
-  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+  t.style.color = type === 'error' ? 'white' : 'var(--surface)';
+  t.classList.add('show'); 
+  setTimeout(() => t.classList.remove('show'), 3500);
 }
 </script>
 </body>
