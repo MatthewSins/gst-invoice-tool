@@ -27,15 +27,21 @@ th { background: var(--surface); font-weight: 700; }
 .form-group { margin-bottom: 15px; }
 .form-group label { display: block; font-weight: 600; margin-bottom: 5px; }
 .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; }
-.toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 20px; background: #059669; color: white; border-radius: 8px; display:none; }
+.toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 20px; background: #059669; color: white; border-radius: 8px; }
 </style>
 </head>
 <body>
 
 <div id="auth-panel" class="auth-box">
   <h2 style="text-align:center; margin-bottom:20px;">Admin Login</h2>
-  <div class="form-group"><label>Email</label><input type="email" id="admin-email" placeholder="matthewdebbarman@gmail.com"></div>
-  <div class="form-group"><label>Password</label><input type="password" id="admin-password"></div>
+  <div class="form-group">
+    <label>Email</label>
+    <input type="email" id="admin-email" placeholder="matthewdebbarman@gmail.com">
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="admin-password">
+  </div>
   <button class="btn btn-primary" onclick="adminLogin()" style="width:100%; padding:12px;">Login</button>
   <p style="text-align:center; font-size:12px; color:#999; margin-top:15px;">Admin access only - Unauthorized access is prohibited</p>
 </div>
@@ -49,6 +55,7 @@ th { background: var(--surface); font-weight: 700; }
 
   <div class="container">
     
+    <!-- DASHBOARD -->
     <div class="section">
       <h2>📊 Dashboard</h2>
       <div>
@@ -58,24 +65,35 @@ th { background: var(--surface); font-weight: 700; }
       </div>
     </div>
 
+    <!-- USER MANAGEMENT -->
     <div class="section">
       <h2>👥 User Management</h2>
       <button class="btn btn-primary" onclick="loadUsers()">Refresh</button>
       <table>
-        <thead><tr><th>Email/ID</th><th>Plan</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="users-table"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
+        <thead>
+          <tr><th>Email</th><th>Plan</th><th>Created</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="users-table">
+          <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+        </tbody>
       </table>
     </div>
 
+    <!-- INVOICES MONITORING -->
     <div class="section">
       <h2>📋 Invoices Monitoring</h2>
       <button class="btn btn-primary" onclick="loadInvoices()">Refresh</button>
       <table>
-        <thead><tr><th>Invoice #</th><th>User ID</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
-        <tbody id="invoices-table"><tr><td colspan="5" style="text-align:center;">Loading...</td></tr></tbody>
+        <thead>
+          <tr><th>Invoice #</th><th>User</th><th>Amount</th><th>Date</th><th>Status</th></tr>
+        </thead>
+        <tbody id="invoices-table">
+          <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
+        </tbody>
       </table>
     </div>
 
+    <!-- SYSTEM SETTINGS -->
     <div class="section">
       <h2>⚙️ System Controls</h2>
       <button class="btn btn-primary" onclick="runBackup()">📦 Backup Database</button>
@@ -83,22 +101,27 @@ th { background: var(--surface); font-weight: 700; }
       <p id="system-status" style="margin-top:15px; color:#999; font-size:12px;"></p>
     </div>
 
+    <!-- ADMIN LOGS -->
     <div class="section">
       <h2>📝 Admin Activity Log</h2>
       <table>
-        <thead><tr><th>Time</th><th>Action</th><th>Details</th></tr></thead>
-        <tbody id="logs-table"><tr><td colspan="3" style="text-align:center; color:#999;">No activity logged</td></tr></tbody>
+        <thead>
+          <tr><th>Time</th><th>Action</th><th>Details</th></tr>
+        </thead>
+        <tbody id="logs-table">
+          <tr><td colspan="3" style="text-align:center; color:#999;">No activity logged</td></tr>
+        </tbody>
       </table>
     </div>
 
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" style="display:none;"></div>
 
 <script>
 const SUPABASE_URL = "https://xoueoaaihnidlncyngwu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdWVvYWFpaG5pZGxuY3luZ3d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1Nzc4NDgsImV4cCI6MjA5ODE1Mzg0OH0.3i1tWUZoDvNNu8N1HqkDMsuwVAVnQfZ0PmtZ0qZmLlY";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdWVvYWFhaG5pZGxuY3luZ3d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1Nzc4NDgsImV4cCI6MjA5ODE1Mzg0OH0.3i1tWUZoDvNNu8N1HqkDMsuwVAVnQfZ0PmtZ0qZmLlY";
 const ADMIN_EMAIL = "matthewdebbarman@gmail.com";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -107,24 +130,41 @@ let adminSession = null;
 async function adminLogin() {
   const email = document.getElementById('admin-email').value;
   const pwd = document.getElementById('admin-password').value;
-  if (email !== ADMIN_EMAIL) return toast("Only authorized admin email can access", true);
-  if (!email || !pwd) return toast("Email and password required", true);
+
+  if (email !== ADMIN_EMAIL) {
+    return toast("Only authorized admin email can access", true);
+  }
+
+  if (!email || !pwd) {
+    return toast("Email and password required", true);
+  }
 
   try {
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
     if (error) throw error;
+
     adminSession = data.session;
-    document.getElementById('auth-panel').style.display = 'none';
-    document.getElementById('admin-panel').style.display = 'block';
-    logAdminAction('LOGIN', `Admin logged in from ${email}`);
-    loadDashboard(); loadUsers(); loadInvoices(); fetchLogs();
-  } catch (err) { toast(err.message, true); }
+    
+    // Verify this is the admin
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', data.session.user.id).single();
+    if (profile && email === ADMIN_EMAIL) {
+      document.getElementById('auth-panel').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      logAdminAction('LOGIN', `Admin logged in from ${email}`);
+      loadDashboard();
+    } else {
+      toast("Not authorized as admin", true);
+    }
+  } catch (err) {
+    toast(err.message, true);
+  }
 }
 
 async function adminLogout() {
   if (confirm("Logout from admin panel?")) {
     logAdminAction('LOGOUT', 'Admin logged out');
-    await sb.auth.signOut(); location.reload();
+    await sb.auth.signOut();
+    location.reload();
   }
 }
 
@@ -132,78 +172,126 @@ async function loadDashboard() {
   try {
     const { data: users } = await sb.from('profiles').select('*');
     const { data: invoices } = await sb.from('invoices').select('*');
-    let revenue = 0; (invoices || []).forEach(i => revenue += i.total_amount || 0);
+
+    let revenue = 0;
+    (invoices || []).forEach(i => revenue += i.total_amount || 0);
 
     document.getElementById('stat-users').textContent = (users || []).length;
     document.getElementById('stat-invoices').textContent = (invoices || []).length;
     document.getElementById('stat-revenue').textContent = '₹' + revenue.toLocaleString('en-IN', { maximumFractionDigits: 0 });
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 async function loadUsers() {
   try {
     const { data: users } = await sb.from('profiles').select('*');
-    const html = (users || []).map(u => `<tr><td>${u.id.slice(0, 8)}...</td><td>${u.plan_type || 'free'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td><button class="btn btn-danger" onclick="deleteUser('${u.id}')" style="padding:5px 10px; font-size:12px;">Delete</button></td></tr>`).join('');
+    
+    const html = (users || []).map(u => `
+      <tr>
+        <td>${u.business_name || 'N/A'}</td>
+        <td>${u.plan_type || 'free'}</td>
+        <td>${new Date(u.created_at).toLocaleDateString()}</td>
+        <td>
+          <button class="btn btn-danger" onclick="deleteUser('${u.id}')" style="padding:5px 10px; font-size:12px;">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
     document.getElementById('users-table').innerHTML = html || '<tr><td colspan="4">No users</td></tr>';
     logAdminAction('VIEW_USERS', `Viewed ${(users || []).length} users`);
-  } catch (err) { toast(err.message, true); }
+  } catch (err) {
+    toast(err.message, true);
+  }
 }
 
 async function loadInvoices() {
   try {
     const { data: invoices } = await sb.from('invoices').select('*').limit(50);
-    const html = (invoices || []).map(i => `<tr><td>${i.invoice_number || '#' + i.id.slice(0, 8)}</td><td>${i.user_id?.slice(0, 8) || 'Unknown'}</td><td>₹${(i.total_amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td><td>${new Date(i.invoice_date).toLocaleDateString()}</td><td>${i.status || 'saved'}</td></tr>`).join('');
+    
+    const html = (invoices || []).map(i => `
+      <tr>
+        <td>${i.invoice_number || '#' + i.id.slice(0, 8)}</td>
+        <td>${i.user_id?.slice(0, 8) || 'Unknown'}</td>
+        <td>₹${(i.total_amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+        <td>${new Date(i.invoice_date).toLocaleDateString()}</td>
+        <td>${i.status || 'saved'}</td>
+      </tr>
+    `).join('');
+
     document.getElementById('invoices-table').innerHTML = html || '<tr><td colspan="5">No invoices</td></tr>';
     logAdminAction('VIEW_INVOICES', `Viewed ${(invoices || []).length} invoices`);
-  } catch (err) { toast(err.message, true); }
+  } catch (err) {
+    toast(err.message, true);
+  }
 }
 
 async function deleteUser(userId) {
   if (!confirm("Delete this user and all their data? This cannot be undone!")) return;
+
   try {
     await sb.from('invoices').delete().eq('user_id', userId);
     await sb.from('profiles').delete().eq('id', userId);
+    
     logAdminAction('DELETE_USER', `Deleted user ${userId}`);
-    toast("User deleted"); loadUsers();
-  } catch (err) { toast(err.message, true); }
+    toast("User deleted");
+    loadUsers();
+  } catch (err) {
+    toast(err.message, true);
+  }
 }
 
-function runBackup() {
-  toast("Backup started..."); logAdminAction('BACKUP', 'Database backup initiated');
-  setTimeout(() => { toast("Backup completed"); document.getElementById('system-status').textContent = '✓ Last backup: ' + new Date().toLocaleString(); }, 2000);
+async function runBackup() {
+  toast("Backup started...");
+  logAdminAction('BACKUP', 'Database backup initiated');
+  
+  setTimeout(() => {
+    toast("Backup completed");
+    document.getElementById('system-status').textContent = '✓ Last backup: ' + new Date().toLocaleString();
+  }, 2000);
 }
 
 function clearLogs() {
   if (!confirm("Clear all admin logs?")) return;
+  
   document.getElementById('logs-table').innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Logs cleared</td></tr>';
-  logAdminAction('CLEAR_LOGS', 'Admin logs cleared'); toast("Logs cleared");
+  logAdminAction('CLEAR_LOGS', 'Admin logs cleared');
+  toast("Logs cleared");
 }
 
 function logAdminAction(action, details) {
-  if (adminSession) {
-    const time = new Date().toLocaleTimeString();
-    document.getElementById('logs-table').insertAdjacentHTML('afterbegin', `<tr><td>${time}</td><td><strong>${action}</strong></td><td>${details}</td></tr>`);
-    // Example integration: sb.from('admin_logs').insert({ admin_id: adminSession.user.id, action, details })
+  try {
+    if (adminSession) {
+      sb.from('admin_logs').insert({
+        admin_id: adminSession.user.id,
+        action,
+        details,
+        created_at: new Date().toISOString()
+      }).catch(err => console.error('Log error:', err));
+    }
+  } catch (err) {
+    console.error('Logging error:', err);
   }
 }
 
-function fetchLogs() { /* Fetch real logs from 'admin_logs' if the table is created */ }
-
 function toast(msg, isError = false) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.style.background = isError ? '#dc2626' : '#059669'; t.style.display = 'block';
+  t.textContent = msg;
+  t.style.background = isError ? '#dc2626' : '#059669';
+  t.style.display = 'block';
   setTimeout(() => t.style.display = 'none', 4000);
 }
 
 window.onload = () => {
-  sb.auth.getSession().then(({ data }) => {
+  const { data } = sb.auth.getSession().then(({ data }) => {
     if (data.session && data.session.user.email === ADMIN_EMAIL) {
       adminSession = data.session;
       document.getElementById('auth-panel').style.display = 'none';
       document.getElementById('admin-panel').style.display = 'block';
-      loadDashboard(); loadUsers(); loadInvoices();
+      loadDashboard();
     }
-  });
+  }).catch(() => {});
 };
 </script>
 </body>
