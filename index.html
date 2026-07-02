@@ -5,59 +5,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1e1e2e">
 <title>TaxPulse Pro — Enterprise GST & AI Automation</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <style>
   :root {
     --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8; --surface: #f8fafc;
     --card: #ffffff; --border: #e2e8f0; --accent: #2563eb; --accent-hover: #1d4ed8;
-    --accent-light: #eff6ff; --green: #059669; --green-light: #d1fae5;
-    --amber: #d97706; --amber-light: #fef3c7; --red: #dc2626; --radius: 12px;
+    --accent-light: #eff6ff; --accent-dark: #1e3a8a; --green: #059669; --green-light: #d1fae5;
+    --amber: #d97706; --amber-light: #fef3c7; --red: #dc2626; --red-light: #fee2e2;
+    --radius: 12px;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   body.dark { --ink: #f8fafc; --ink2: #cbd5e1; --ink3: #64748b; --surface: #0f172a; --card: #1e293b; --border: #334155; --accent-light: #1e3a8a; }
-  * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.2s; }
-  body { font-family: var(--font-main); background: var(--surface); color: var(--ink); min-height: 100vh; }
+  * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.2s, border-color 0.2s; }
+  body { font-family: var(--font-main); background: var(--surface); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
   
   nav { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
-  .nav-brand { font-size: 18px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .nav-brand { font-size: 18px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
   .nav-right { display: flex; align-items: center; gap: 12px; }
+  .badge-free { font-size: 12px; color: var(--ink2); background: var(--surface); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; font-weight: 600; }
   .badge-pro { font-size: 12px; color: var(--green); background: var(--green-light); border: 1px solid #a7f3d0; padding: 4px 12px; border-radius: 20px; font-weight: 700; }
   
   .auth-container { max-width: 420px; margin: 80px auto; padding: 40px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
-  .app-tabs { display: flex; gap: 4px; margin-bottom: 32px; border-bottom: 1px solid var(--border); overflow-x: auto; }
-  .tab-btn { background: transparent; border: none; padding: 12px 20px; font-size: 14px; font-weight: 600; color: var(--ink3); cursor: pointer; border-radius: 8px 8px 0 0; position: relative; }
+  .app-tabs { display: flex; gap: 4px; margin-bottom: 32px; border-bottom: 1px solid var(--border); overflow-x: auto; padding-bottom: 4px; }
+  .tab-btn { background: transparent; border: none; padding: 12px 20px; font-size: 14px; font-weight: 600; color: var(--ink3); cursor: pointer; border-radius: 8px 8px 0 0; position: relative; white-space: nowrap; }
+  .tab-btn:hover { color: var(--ink); background: var(--surface); }
   .tab-btn.active { color: var(--accent); background: var(--accent-light); }
-  .app { max-width: 1000px; margin: 0 auto; padding: 32px 20px 80px; }
+  .tab-btn.active::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 2px; background: var(--accent); }
+  .app { max-width: 1200px; margin: 0 auto; padding: 32px 20px 80px; }
   
-  .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--ink); }
+  .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2); }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--ink); font-weight: 500; }
   .btn-green { background: var(--green); color: white; }
   .btn-danger { background: var(--red); color: white; }
   
   .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; color: var(--ink2); text-transform: uppercase; }
-  .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
+  .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; background: var(--surface); color: var(--ink); font-size: 14px; font-family: var(--font-main); }
   
-  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
-  .stat-title { font-size: 12px; color: var(--ink3); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
-  .stat-value { font-size: 24px; font-weight: 800; color: var(--ink); }
+  .filing-banner { background: var(--accent-light); border-left: 4px solid var(--accent); padding: 20px; border-radius: 0 var(--radius) var(--radius) 0; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); gap: 16px; }
+  .filing-banner h3 { color: var(--accent-dark); font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .filing-banner-actions { display: flex; gap: 12px; flex-shrink: 0; }
+
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
+  .stat-title { font-size: 12px; color: var(--ink3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--ink); }
   .chart-container { height: 350px; margin-bottom: 32px; background: var(--card); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); }
   
-  .data-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 32px; }
+  .data-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 32px; }
   .data-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--surface); font-weight: 700; }
   .data-table { width: 100%; border-collapse: collapse; }
   .data-table th, .data-table td { padding: 14px 24px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
-  .data-table th { color: var(--ink2); font-weight: 700; font-size: 12px; text-transform: uppercase; }
+  .data-table th { color: var(--ink2); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
   .data-table tr:hover { background: var(--surface); }
   
-  .upload-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; }
+  .upload-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
   .upload-zone:hover { border-color: var(--accent); background: rgba(37,99,235,0.05); }
   
   .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border); }
@@ -78,9 +91,12 @@
   .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--ink3); }
   .action-bar { padding: 16px 24px; background: var(--surface); display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid var(--border); margin: 20px -32px -32px -32px; border-radius: 0 0 16px 16px; }
 
-  .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 18px; background: var(--ink); color: white; border-radius: 10px; opacity: 0; z-index: 300; transition: all 0.3s; }
+  .toast { position: fixed; bottom: 24px; right: 24px; left: 24px; max-width: 360px; margin: 0 auto; background: var(--ink); color: var(--card); padding: 12px 18px; border-radius: 10px; opacity: 0; z-index: 300; transition: all 0.3s; box-shadow: var(--shadow); }
   .toast.show { opacity: 1; transform: translateY(-10px); }
-  .toast.error { background: var(--red); }
+  .toast.error { background: var(--red); color: white;}
+  .toast.success { background: var(--green); color: white;}
+  .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   
   #pdf-template { display: none; padding: 40px; background: white; color: black; font-family: Arial, sans-serif; max-width: 900px; }
 </style>
@@ -88,46 +104,84 @@
 <body>
 
 <nav>
-  <div class="nav-brand">⚡ TaxPulse Pro</div>
+  <div class="nav-brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    TaxPulse Pro
+  </div>
   <div class="nav-right" id="nav-user-info" style="display:none;">
     <button class="btn btn-outline" style="padding:6px 10px; border-radius:50%;" onclick="toggleTheme()">🌓</button>
-    <span id="plan-badge" class="badge-pro">Pro Access</span>
-    <button class="btn btn-primary" style="padding:8px 14px; font-size:13px;" onclick="handleLogout()">Sign Out</button>
+    <span id="plan-badge" class="badge-free">Free Plan</span>
+    <button class="btn btn-primary" id="nav-upgrade-btn" style="padding:8px 14px; font-size:13px;" onclick="showUpgradePlan()">Upgrade ✨</button>
+    <button class="btn btn-outline" style="padding:8px 14px; font-size:13px;" onclick="handleLogout()">Sign Out</button>
   </div>
 </nav>
 
 <div id="auth-view" class="auth-container">
-  <h2 style="font-size:22px; font-weight:800; margin-bottom:24px; text-align:center;">Welcome to TaxPulse</h2>
-  <div class="form-group"><label>Work Email</label><input type="email" id="auth-email"></div>
-  <div class="form-group"><label>Password</label><input type="password" id="auth-password"></div>
-  <button class="btn btn-primary" style="width:100%; padding:14px;" onclick="handleLoginSubmit()">Secure Login</button>
-  <button class="btn btn-outline" style="width:100%; padding:14px; margin-top:12px;" onclick="handleSignupSubmit()">Create Account</button>
+  <div style="text-align:center; margin-bottom:28px;">
+    <div style="font-size:36px; margin-bottom:12px;">⚡</div>
+    <h2 style="font-size:22px; font-weight:800; margin-bottom:6px;">Welcome to TaxPulse</h2>
+    <p style="font-size:14px; color:var(--ink3);">AI-powered GST filing for small businesses</p>
+  </div>
+  <div class="form-group"><label>Work Email</label><input type="email" id="auth-email" placeholder="owner@business.com"></div>
+  <div class="form-group"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••"></div>
+  <button class="btn btn-primary" id="login-btn" style="width:100%; padding:14px;" onclick="handleLoginSubmit()">Secure Login</button>
+  <button class="btn btn-outline" id="signup-btn" style="width:100%; padding:14px; margin-top:12px;" onclick="handleSignupSubmit()">Create Free Account</button>
 </div>
 
 <div class="app" id="app-view" style="display:none;">
   <div class="app-tabs">
     <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-    <button class="tab-btn" onclick="switchTab('create')">✏️ Invoice Generator</button>
+    <button class="tab-btn" onclick="switchTab('create')">✏️ Create Invoice</button>
     <button class="tab-btn" onclick="switchTab('scanner')">📸 AI Scanner</button>
     <button class="tab-btn" onclick="switchTab('invoices')">📋 My Invoices</button>
     <button class="tab-btn" onclick="switchTab('gstr')">📑 GST Returns</button>
   </div>
 
   <div id="dashboard-view">
-    <h2 style="font-size:20px; font-weight:800; margin-bottom:24px;">Dashboard</h2>
+    
+    <div class="filing-banner">
+      <div>
+        <h3>✅ Compliance Status: Ready to File</h3>
+        <p style="font-size:14px; color:var(--ink2); font-weight:500;">GSTR-1 Due: 11th of next month</p>
+      </div>
+      <div class="filing-banner-actions">
+        <button class="btn btn-primary" onclick="downloadJSONBanner()">⬇ GSTR-1 JSON</button>
+      </div>
+    </div>
+
+    <h2 style="font-size:20px; font-weight:800; margin-bottom:24px;">Financial Overview</h2>
+    
     <div class="dash-grid">
-      <div class="stat-card"><div class="stat-title">Total Sales (GSTR-1)</div><div class="stat-value" id="dash-sales">₹0</div><div style="font-size:12px; color:var(--ink3); margin-top:8px;" id="dash-sales-detail">0 invoices</div></div>
-      <div class="stat-card"><div class="stat-title">GST Payable</div><div class="stat-value" id="dash-tax">₹0</div><div style="font-size:12px; color:var(--ink3); margin-top:8px;" id="dash-tax-detail">CGST + SGST</div></div>
-      <div class="stat-card"><div class="stat-title">Available ITC (GSTR-2B)</div><div class="stat-value" id="dash-itc">₹0</div><div style="font-size:12px; color:var(--ink3); margin-top:8px;" id="dash-itc-detail">0 purchases</div></div>
-      <div class="stat-card"><div class="stat-title">AI Scanned</div><div class="stat-value" id="dash-scanned">0</div></div>
+      <div class="stat-card">
+        <div class="stat-title">Total Sales (GSTR-1)</div>
+        <div class="stat-value" id="dash-sales">₹0</div>
+        <div style="font-size:12px; color:var(--ink3); margin-top:8px;" id="dash-sales-detail">0 invoices</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">GST Payable</div>
+        <div class="stat-value" id="dash-tax">₹0</div>
+        <div style="font-size:12px; color:var(--ink3); margin-top:8px;" id="dash-tax-detail">CGST + SGST</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Available ITC (GSTR-2B)</div>
+        <div class="stat-value" id="dash-itc">₹0</div>
+        <div style="font-size:12px; color:var(--ink3); margin-top:8px;" id="dash-itc-detail">0 purchases</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">AI Scanned</div>
+        <div class="stat-value" id="dash-scanned">0</div>
+      </div>
     </div>
     <div class="chart-container"><canvas id="salesChart"></canvas></div>
 
     <div class="data-section">
-      <div class="data-header"><h3>Recent Invoices</h3></div>
+      <div class="data-header">
+        <h3>Recent Invoices</h3>
+        <button class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="switchTab('create')">+ New Invoice</button>
+      </div>
       <table class="data-table">
-        <thead><tr><th>Invoice #</th><th>Party</th><th>Amount</th><th>Date</th><th>Type</th><th>Status</th></tr></thead>
-        <tbody id="recent-invoices"><tr><td colspan="6" style="text-align:center;">Loading...</td></tr></tbody>
+        <thead><tr><th>Invoice #</th><th>Party</th><th>Amount</th><th>Date</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="recent-invoices"><tr><td colspan="7" style="text-align:center;">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -162,7 +216,7 @@
             </tr>
           </tbody>
         </table>
-        <button class="btn btn-outline" style="margin-top:16px; padding:6px 12px; font-size:12px;" onclick="addManualRow()">+ Add Item</button>
+        <button class="btn btn-outline" style="margin-top:16px; padding:6px 12px; font-size:12px;" onclick="addManualRow()">+ Add Line Item</button>
 
         <div style="margin-top:32px; display:flex; justify-content:flex-end; border-top:1px solid var(--border); padding-top:24px;">
           <div style="text-align:right;">
@@ -296,7 +350,7 @@ const SUPABASE_URL = "https://xoueoaaihnidlncyngwu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdWVvYWFpaG5pZGxuY3luZ3d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1Nzc4NDgsImV4cCI6MjA5ODE1Mzg0OH0.3i1tWUZoDvNNu8N1HqkDMsuwVAVnQfZ0PmtZ0qZmLlY";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let userSession = null, currentChart = null, aiExtractedData = [], currentGSTRData = null, currentInvoiceId = null;
+let userSession = null, userPlan = 'free', currentChart = null, aiExtractedData = [], currentGSTRData = null, currentInvoiceId = null;
 
 window.onload = async () => {
   document.getElementById('inv-date').valueAsDate = new Date();
@@ -318,7 +372,7 @@ function toggleTheme() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  2. AUTH & ROUTING
+//  2. AUTH & ROUTING (Restored Profile Check)
 // ═══════════════════════════════════════════════════════════════════
 async function handleLoginSubmit() {
   try {
@@ -342,11 +396,25 @@ async function handleLogout() {
   await supabaseClient.auth.signOut(); window.location.reload();
 }
 
-function setupApp(session) {
+async function setupApp(session) {
+  if (!session?.user) return;
   userSession = session;
   document.getElementById('auth-view').style.display = 'none';
   document.getElementById('app-view').style.display = 'block';
   document.getElementById('nav-user-info').style.display = 'flex';
+
+  // Restored Phase 1 Plan Badges
+  const { data: profile } = await supabaseClient.from('profiles').select('plan_type').eq('id', session.user.id).single();
+  if (profile?.plan_type === 'pro') {
+    userPlan = 'pro';
+    document.getElementById('plan-badge').className = 'badge-pro';
+    document.getElementById('plan-badge').textContent = '⚡ Pro';
+  } else if (profile?.plan_type === 'starter') {
+    userPlan = 'starter';
+    document.getElementById('plan-badge').className = 'badge-pro';
+    document.getElementById('plan-badge').textContent = '⭐ Starter';
+  }
+
   loadDashboardData();
 }
 
@@ -368,7 +436,7 @@ async function loadDashboardData() {
 
   (invoices || []).forEach(inv => {
     if (inv.is_purchase) {
-      totalITC += (inv.cgst_amount || 0) + (inv.sgst_amount || 0); purchaseCount++; scanCount++; // assuming purchases are scanned
+      totalITC += (inv.cgst_amount || 0) + (inv.sgst_amount || 0) + (inv.igst_amount || 0); purchaseCount++; scanCount++;
     } else {
       totalSales += inv.total_amount || 0; totalCGST += inv.cgst_amount || 0; totalSGST += inv.sgst_amount || 0; saleCount++;
       const m = new Date(inv.invoice_date).toLocaleDateString('en-IN', { month: 'short' });
@@ -390,8 +458,8 @@ async function loadDashboardData() {
     });
   }
 
-  const html = (invoices || []).slice(0, 5).map(inv => `<tr style="cursor:pointer;" onclick="showInvoiceDetail('${inv.id}')"><td>${inv.invoice_number}</td><td>${inv.buyer_name}</td><td>₹${inv.total_amount}</td><td>${new Date(inv.invoice_date).toLocaleDateString('en-IN')}</td><td><span class="tag ${inv.is_purchase ? 'purchase' : 'sale'}">${inv.is_purchase ? 'Purchase' : 'Sale'}</span></td><td><span class="tag">${inv.status || 'saved'}</span></td></tr>`).join('');
-  document.getElementById('recent-invoices').innerHTML = html || '<tr><td colspan="6" style="text-align:center;">No invoices</td></tr>';
+  const html = (invoices || []).slice(0, 5).map(inv => `<tr style="cursor:pointer;" onclick="showInvoiceDetail('${inv.id}')"><td>${inv.invoice_number}</td><td>${inv.buyer_name}</td><td>₹${inv.total_amount}</td><td>${new Date(inv.invoice_date).toLocaleDateString('en-IN')}</td><td><span class="tag ${inv.is_purchase ? 'purchase' : 'sale'}">${inv.is_purchase ? 'Purchase' : 'Sale'}</span></td><td><span class="tag">${inv.status || 'saved'}</span></td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">View</button></td></tr>`).join('');
+  document.getElementById('recent-invoices').innerHTML = html || '<tr><td colspan="7" style="text-align:center;">No invoices</td></tr>';
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -463,7 +531,7 @@ async function loadInvoicesList() {
   const searchTerm = document.getElementById('search-invoices').value.toLowerCase();
   const filtered = (invoices || []).filter(inv => !searchTerm || (inv.invoice_number && inv.invoice_number.toLowerCase().includes(searchTerm)) || (inv.buyer_name && inv.buyer_name.toLowerCase().includes(searchTerm)));
 
-  document.getElementById('invoices-table').innerHTML = filtered.length > 0 ? filtered.map(inv => `<tr style="cursor:pointer;"><td onclick="showInvoiceDetail('${inv.id}')">${inv.invoice_number}</td><td onclick="showInvoiceDetail('${inv.id}')">${inv.buyer_name}</td><td onclick="showInvoiceDetail('${inv.id}')">₹${inv.total_amount}</td><td onclick="showInvoiceDetail('${inv.id}')">${new Date(inv.invoice_date).toLocaleDateString('en-IN')}</td><td><span class="tag ${inv.is_purchase ? 'purchase' : 'sale'}">${inv.is_purchase ? 'Purchase' : 'Sale'}</span></td><td><span class="tag">${inv.status || 'saved'}</span></td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="showInvoiceDetail('${inv.id}')">View</button></td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;">No invoices found</td></tr>';
+  document.getElementById('invoices-table').innerHTML = filtered.length > 0 ? filtered.map(inv => `<tr style="cursor:pointer;"><td onclick="showInvoiceDetail('${inv.id}')">${inv.invoice_number}</td><td onclick="showInvoiceDetail('${inv.id}')">${inv.buyer_name}</td><td onclick="showInvoiceDetail('${inv.id}')">₹${inv.total_amount}</td><td onclick="showInvoiceDetail('${inv.id}')">${new Date(inv.invoice_date).toLocaleDateString('en-IN')}</td><td><span class="tag ${inv.is_purchase ? 'purchase' : 'sale'}">${inv.is_purchase ? 'Purchase' : 'Sale'}</span></td><td><span class="tag">${inv.status || 'saved'}</span></td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="showInvoiceDetail('${inv.id}')">View</button> <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="downloadPDFForInvoice('${inv.id}')">PDF</button></td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;">No invoices found</td></tr>';
 }
 document.getElementById('search-invoices').addEventListener('input', loadInvoicesList); document.getElementById('filter-type').addEventListener('change', loadInvoicesList);
 
@@ -474,7 +542,7 @@ async function showInvoiceDetail(invoiceId) {
   if (invoice.invoice_items && invoice.invoice_items.length > 0) {
     itemsHTML = invoice.invoice_items.map(item => `<tr><td>${item.description}</td><td>${item.hsn_code || '-'}</td><td>${item.quantity}</td><td>₹${parseFloat(item.rate).toFixed(2)}</td><td>${item.cgst_percent}%</td><td>${item.sgst_percent}%</td><td>₹${(item.quantity * item.rate * ((item.cgst_percent + item.sgst_percent) / 100 + 1)).toFixed(2)}</td></tr>`).join('');
   }
-  document.getElementById('invoice-modal-content').innerHTML = `<div style="margin-bottom:20px;"><h3 style="font-size:14px; margin-bottom:12px;">Basic Info</h3><table style="width:100%; font-size:13px; line-height:1.8;"><tr><td><strong>Invoice #:</strong></td><td>${invoice.invoice_number}</td></tr><tr><td><strong>Date:</strong></td><td>${new Date(invoice.invoice_date).toLocaleDateString('en-IN')}</td></tr><tr><td><strong>Buyer:</strong></td><td>${invoice.buyer_name}</td></tr></table></div><div style="margin-bottom:20px;"><h3 style="font-size:14px; margin-bottom:12px;">Line Items</h3><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead style="background:#f5f5f5; border-bottom:1px solid #ddd;"><tr><th style="padding:8px; text-align:left;">Description</th><th style="padding:8px;">HSN</th><th style="padding:8px; text-align:right;">Qty</th><th style="padding:8px; text-align:right;">Rate</th><th style="padding:8px; text-align:right;">CGST%</th><th style="padding:8px; text-align:right;">SGST%</th><th style="padding:8px; text-align:right;">Amount</th></tr></thead><tbody>${itemsHTML}</tbody></table></div><div style="border-top:1px solid var(--border); padding-top:16px;"><table style="width:100%; font-size:13px; text-align:right;"><tr><td style="text-align:left;"><strong>Subtotal:</strong></td><td>₹${invoice.total_amount}</td></tr><tr><td style="text-align:left;"><strong>CGST:</strong></td><td>₹${invoice.cgst_amount || 0}</td></tr><tr><td style="text-align:left;"><strong>SGST:</strong></td><td>₹${invoice.sgst_amount || 0}</td></tr><tr style="border-top:1px solid var(--border); font-weight:700; font-size:14px;"><td style="text-align:left;">TOTAL:</td><td>₹${invoice.total_amount + (invoice.cgst_amount || 0) + (invoice.sgst_amount || 0)}</td></tr></table></div>`;
+  document.getElementById('invoice-modal-content').innerHTML = `<div style="margin-bottom:20px;"><h3 style="font-size:14px; margin-bottom:12px;">Basic Info</h3><table style="width:100%; font-size:13px; line-height:1.8;"><tr><td><strong>Invoice #:</strong></td><td>${invoice.invoice_number}</td></tr><tr><td><strong>Date:</strong></td><td>${new Date(invoice.invoice_date).toLocaleDateString('en-IN')}</td></tr><tr><td><strong>Buyer:</strong></td><td>${invoice.buyer_name}</td></tr><tr><td><strong>Status:</strong></td><td>${invoice.status || 'saved'}</td></tr></table></div><div style="margin-bottom:20px;"><h3 style="font-size:14px; margin-bottom:12px;">Line Items</h3><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead style="background:#f5f5f5; border-bottom:1px solid #ddd;"><tr><th style="padding:8px; text-align:left;">Description</th><th style="padding:8px;">HSN</th><th style="padding:8px; text-align:right;">Qty</th><th style="padding:8px; text-align:right;">Rate</th><th style="padding:8px; text-align:right;">CGST%</th><th style="padding:8px; text-align:right;">SGST%</th><th style="padding:8px; text-align:right;">Amount</th></tr></thead><tbody>${itemsHTML}</tbody></table></div><div style="border-top:1px solid var(--border); padding-top:16px;"><table style="width:100%; font-size:13px; text-align:right;"><tr><td style="text-align:left;"><strong>Subtotal:</strong></td><td>₹${invoice.total_amount}</td></tr><tr><td style="text-align:left;"><strong>CGST:</strong></td><td>₹${invoice.cgst_amount || 0}</td></tr><tr><td style="text-align:left;"><strong>SGST:</strong></td><td>₹${invoice.sgst_amount || 0}</td></tr><tr style="border-top:1px solid var(--border); font-weight:700; font-size:14px;"><td style="text-align:left;">TOTAL:</td><td>₹${invoice.total_amount + (invoice.cgst_amount || 0) + (invoice.sgst_amount || 0)}</td></tr></table></div>`;
   document.getElementById('invoice-modal').classList.add('active');
 }
 function closeInvoiceModal() { document.getElementById('invoice-modal').classList.remove('active'); currentInvoiceId = null; }
@@ -488,7 +556,10 @@ async function deleteInvoice() {
   } catch (error) { showToast(error.message, 'error'); }
 }
 async function downloadModalPDF() {
-  const { data: invoice } = await supabaseClient.from('invoices').select(`*, invoice_items (*)`).eq('id', currentInvoiceId).single();
+  if (currentInvoiceId) downloadPDFForInvoice(currentInvoiceId);
+}
+async function downloadPDFForInvoice(id) {
+  const { data: invoice } = await supabaseClient.from('invoices').select(`*, invoice_items (*)`).eq('id', id).single();
   document.getElementById('pdf-date').innerText = new Date(invoice.invoice_date).toLocaleDateString('en-IN'); document.getElementById('pdf-sup-gstin').innerText = invoice.supplier_gstin || 'N/A'; document.getElementById('pdf-inv-num').innerText = invoice.invoice_number; document.getElementById('pdf-buyer-name').innerText = invoice.buyer_name; document.getElementById('pdf-buyer-gstin').innerText = invoice.buyer_gstin || 'N/A'; document.getElementById('pdf-subtotal').innerText = invoice.total_amount.toFixed(2); document.getElementById('pdf-cgst-total').innerText = (invoice.cgst_amount || 0).toFixed(2); document.getElementById('pdf-sgst-total').innerText = (invoice.sgst_amount || 0).toFixed(2); document.getElementById('pdf-total').innerText = (invoice.total_amount + (invoice.cgst_amount || 0) + (invoice.sgst_amount || 0)).toFixed(2);
   let itemsHTML = '';
   if (invoice.invoice_items && invoice.invoice_items.length > 0) { invoice.invoice_items.forEach(item => { const amount = item.quantity * item.rate * ((item.cgst_percent + item.sgst_percent) / 100 + 1); itemsHTML += `<tr><td style="padding:8px;">${item.description}</td><td style="padding:8px;">${item.hsn_code || '-'}</td><td style="padding:8px; text-align:right;">${item.quantity}</td><td style="padding:8px; text-align:right;">₹${parseFloat(item.rate).toFixed(2)}</td><td style="padding:8px; text-align:right;">${item.cgst_percent}%</td><td style="padding:8px; text-align:right;">${item.sgst_percent}%</td><td style="padding:8px; text-align:right;">₹${amount.toFixed(2)}</td></tr>`; }); }
@@ -498,7 +569,7 @@ async function downloadModalPDF() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  7. GSTR RETURNS (Phase 2 Logic)
+//  7. GSTR RETURNS (Phase 1 & 2 Merged Logic)
 // ═══════════════════════════════════════════════════════════════════
 async function generateGSTR(type) {
   const { data: invoices } = await supabaseClient.from('invoices').select('*').eq('user_id', userSession.user.id);
@@ -523,6 +594,29 @@ function downloadJSON() {
   const blob = new Blob([JSON.stringify(currentGSTRData, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gstr.json'; a.click(); showToast('Downloaded!', 'success');
 }
+
+// Added back the specific GSTR-1 Banner Export function from Phase 1
+async function downloadJSONBanner() {
+  if (!userSession) return;
+  try {
+    const { data: invoices } = await supabaseClient.from('invoices').select(`*, invoice_items (*)`).eq('user_id', userSession.user.id).eq('is_purchase', false);
+    const fp = new Date().getFullYear().toString().slice(-2) + (new Date().getMonth() + 1).toString().padStart(2, '0');
+    const exportData = { gstin: "YOUR_GSTIN", fp, version: "GST3.0.4", b2b: [], b2c: [] };
+    if (invoices) {
+      invoices.forEach(inv => {
+        if (inv.buyer_gstin && inv.buyer_gstin.length === 15) {
+          exportData.b2b.push({ ctin: inv.buyer_gstin, inv: [{ inum: inv.invoice_number, idt: inv.invoice_date, val: inv.total_amount }] });
+        } else {
+          exportData.b2c.push({ typ: "OE", pos: "37", val: inv.total_amount });
+        }
+      });
+    }
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `GSTR1_${fp}.json`; a.click();
+    showToast('✅ GSTR-1 JSON downloaded', 'success');
+  } catch (error) { showToast('Error exporting GSTR-1', 'error'); }
+}
+
 function downloadCSV() {
   let csv = 'Key,Value\n'; Object.entries(currentGSTRData).forEach(([k, v]) => { if (k !== 'title') csv += `${k},${v}\n`; });
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -533,6 +627,7 @@ function shareWhatsApp() {
   const text = Object.entries(currentGSTRData || {}).map(([k, v]) => `${k}: ${v}`).join('\n');
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
+function showUpgradePlan() { showToast("Upgrade plans coming soon", "success"); }
 </script>
 </body>
 </html>
